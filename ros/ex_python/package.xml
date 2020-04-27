@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>exemplos_python</name>
+  <name>ex_python</name>
   <version>0.0.0</version>
-  <description>The exemplos_python package</description>
+  <description>The ex_python package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
