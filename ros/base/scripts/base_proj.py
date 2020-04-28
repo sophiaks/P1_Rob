@@ -63,6 +63,7 @@ tfl = 0
 
 tf_buffer = tf2_ros.Buffer()
 
+
 def recebe(msg):
 	global x # O global impede a recriacao de uma variavel local, para podermos usar o x global ja'  declarado
 	global y
@@ -159,7 +160,7 @@ if __name__=="__main__":
 
     try:
         # Inicializando - por default gira no sentido anti-horário
-        # vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
+        #vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
         
         while not rospy.is_shutdown():
             for r in resultados:
