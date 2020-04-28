@@ -1,11 +1,18 @@
+#! /usr/bin/env python
+# -*- coding:utf-8 -*-
+
 import cv2
 import numpy as np
 import math
 
-cor_menor = np.array([240, 240, 240], dtype=np.uint8)
-cor_maior = np.array([255, 255, 255], dtype=np.uint8)
 
-def pto_fuga(topico_imagem)
+
+def pto_fuga(topico_imagem):
+
+    cor_menor = np.array([240, 240, 240], dtype=np.uint8)
+    cor_maior = np.array([255, 255, 255], dtype=np.uint8)
+
+    topico_imagem = "/camera/rgb/image_raw/compressed"
     while(True):
     #     # Capture frame-by-frame
 
@@ -108,7 +115,7 @@ def pto_fuga(topico_imagem)
                     x2 = int(np.mean(linhas_d_x2))
                     y1 = int(np.mean(linhas_d_y1))
                     y2 = int(np.mean(linhas_d_y2))
-                    cv2.line(frame,(x1,y1), (x2,y2), (50,0,255),2) 
+                    cv2.line(topico_imagem,(x1,y1), (x2,y2), (50,0,255),2) 
         
         #linha esquerda
         if len(linhas_e_m)>1:
@@ -116,7 +123,7 @@ def pto_fuga(topico_imagem)
                     x4 = int(np.mean(linhas_e_x2))
                     y3 = int(np.mean(linhas_e_y1))
                     y4 = int(np.mean(linhas_e_y2))
-                    cv2.line(frame,(x3,y3), (x4,y4), (50,0,255),2) 
+                    cv2.line(topico_imagem,(x3,y3), (x4,y4), (50,0,255),2) 
 
         #ponto de intersecção
         if x1!=0 and x2!=0 and x3!=0 and x4!=0:
