@@ -33,7 +33,11 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 
 import visao_module
-import pto_fuga
+from pto_fuga import pto_fuga
+
+# import pto_fuga
+# operator = pto_fuga.pto_fuga()
+
 
 
 bridge = CvBridge()
@@ -166,7 +170,7 @@ if __name__=="__main__":
         while not rospy.is_shutdown():
             for r in resultados:
                 print(r)
-            pto_fuga(topico_imagem)
+            pto_fuga(recebedor)
             #velocidade_saida.publish(vel)
             rospy.sleep(0.1)
 

@@ -5,26 +5,29 @@ import cv2
 import numpy as np
 import math
 
+cor_menor = np.array([240, 240, 240], dtype=np.uint8)
+cor_maior = np.array([255, 255, 255], dtype=np.uint8)
+
+#TypeError: Expected Ptr<cv::UMat> for argument '%s'
+
 
 
 def pto_fuga(topico_imagem):
 
-    cor_menor = np.array([240, 240, 240], dtype=np.uint8)
-    cor_maior = np.array([255, 255, 255], dtype=np.uint8)
-
     topico_imagem = "/camera/rgb/image_raw/compressed"
     while(True):
-    #     # Capture frame-by-frame
+    #     # Capture frame-by-fra
 
-        mask_white = cv2.inRange(topico_imagem, cor_menor, cor_maior)
+        ret, frame = cap.read()
 
-        
         if ret == False:
             print("Codigo de retorno FALSO - problema para capturar o frame")
 
         blur = cv2.GaussianBlur(mask_white, (5,5),0)
 
-        edges = cv2.Canny(blur,50,150)
+        edges = cv2.Canny(blur,50,150,apertureSize = 3)
+
+        mask_white = cv2.inRange(topico_imagem, cor_menor, cor_maior)
         
         lines = cv2.HoughLines(edges,1,np.pi/180, 150)
 
