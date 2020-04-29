@@ -130,8 +130,10 @@ def roda_todo_frame(imagem):
     try:
         antes = time.clock()
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
+        pto_fuga(cv_image)
         # Note que os resultados já são guardados automaticamente na variável
         # chamada resultados
+
         centro, imagem, resultados =  visao_module.processa(cv_image)        
         for r in resultados:
             # print(r) - print feito para documentar e entender
@@ -170,7 +172,6 @@ if __name__=="__main__":
         while not rospy.is_shutdown():
             for r in resultados:
                 print(r)
-            pto_fuga(recebedor)
             #velocidade_saida.publish(vel)
             rospy.sleep(0.1)
 
