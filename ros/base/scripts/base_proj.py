@@ -34,6 +34,7 @@ from std_msgs.msg import Header
 
 import visao_module
 from pto_fuga import pto_fuga
+from encontra_pista import encontra_pista
 
 # import pto_fuga
 # operator = pto_fuga.pto_fuga()
@@ -130,9 +131,10 @@ def roda_todo_frame(imagem):
     try:
         antes = time.clock()
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
-        pto_fuga(cv_image)
-        # Note que os resultados já são guardados automaticamente na variável
-        # chamada resultados
+
+        pto = pto_fuga(cv_image)
+        
+        ratio = encontra_pista(cv_image)
 
         centro, imagem, resultados =  visao_module.processa(cv_image)        
         for r in resultados:
@@ -172,6 +174,27 @@ if __name__=="__main__":
         while not rospy.is_shutdown():
             for r in resultados:
                 print(r)
+            # Enquanto n~ao houver linhas quase verticais, o rob^o gira e anda pra frente
+            while len(linhas_e_m) = 0 and len(linhas_e_d) =0:
+                vel = Twist(Vector3(0.2,0,0), Vector3(0,0,-0.1))
+                # Se a quantidade de branco for grande o suficiente, o rob^o para de andar e comeca a girar para encontrar o pto de fuga
+                if  ratio > 0.4:
+                    vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.1))
+                    break
+
+            # Se houver um ponto de fuga (achou linhas quase verticais)
+            while len(pto) != 0:
+                #Centralizar no ponto de fuga e andar pra frente
+                if pto[0] > cv_image.shape[0] + 10 
+                    vel = Twist(Vector3(0.2,0,0), Vector3(0,0,-0.1))
+                if pto[0] < cv_image.shape[0] - 10:
+                    vel = Twist(Vector3(0.2,0,0), Vector3(0,0,0.1))
+                if ratio > 0.4:
+
+            
+
+
+
             #velocidade_saida.publish(vel)
             rospy.sleep(0.1)
 

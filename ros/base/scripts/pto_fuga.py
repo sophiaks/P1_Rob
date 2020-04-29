@@ -124,6 +124,8 @@ def pto_fuga(frame):
                 px = int(((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4 - y3*x4))/((x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)))
                 py = int(((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-x4*y3))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)))
                 cv2.circle(frame, (px, py), 1, (0,255,0), 5)
+                pto = (px, py)
+                return pto
 
             cv2.imshow("Vídeo", frame)
 
