@@ -1,11 +1,14 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 
+from __future__ import division, print_function
+
 import cv2
 import numpy as np
 import math
 from matplotlib import pyplot as plt
 import time
+from cv_bridge import CvBridge, CvBridgeError
 
 cor_menor = np.array([240, 240, 240], dtype=np.uint8)
 cor_maior = np.array([255, 255, 255], dtype=np.uint8)
@@ -14,13 +17,14 @@ cor_maior = np.array([255, 255, 255], dtype=np.uint8)
 
 
 
-def pto_fuga(frame):
+def func_pto(frame):
+    '''Use esta função para encontrar o ponto de fuga'''
     while (True):    #     # Capture frame-by-fra
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask_white = cv2.inRange(frame_hsv, cor_menor, cor_maior)
-        blur = cv2.GaussianBlur(mask_white, (5,5),0)
-        edges = cv2.Canny(blur,50,150,apertureSize = 3)
-        lines = cv2.HoughLines(edges,1,np.pi/180, 150)
+        blur = cv2.GaussianBlur(mask_white, (5, 5), 0)
+        edges = cv2.Canny(blur ,50, 150, apertureSize = 3)
+        lines = cv2.HoughLines(edges, 1, np.pi/180, 150)
 
         lista_m = []
         lista_h = []
@@ -41,7 +45,7 @@ def pto_fuga(frame):
 
         xis = []
         yis = []
-        if len(lines) > 0:
+        if lines != None:
             for x in range(0, len(lines)):    
                 for rho, theta in lines[x]:
                     a = np.cos(theta)
@@ -105,19 +109,19 @@ def pto_fuga(frame):
             
             #linha direita
             if len(linhas_d_m)>1:
-                        x1 = int(np.mean(linhas_d_x1))
-                        x2 = int(np.mean(linhas_d_x2))
-                        y1 = int(np.mean(linhas_d_y1))
-                        y2 = int(np.mean(linhas_d_y2))
-                        cv2.line(frame,(x1,y1), (x2,y2), (50,0,255),2) 
+                x1 = int(np.mean(linhas_d_x1))
+                x2 = int(np.mean(linhas_d_x2))
+                y1 = int(np.mean(linhas_d_y1))
+                y2 = int(np.mean(linhas_d_y2))
+                cv2.line(frame,(x1,y1), (x2,y2), (50,0,255),2) 
             
             #linha esquerda
             if len(linhas_e_m)>1:
-                        x3 = int(np.mean(linhas_e_x1))
-                        x4 = int(np.mean(linhas_e_x2))
-                        y3 = int(np.mean(linhas_e_y1))
-                        y4 = int(np.mean(linhas_e_y2))
-                        cv2.line(frame,(x3,y3), (x4,y4), (50,0,255),2) 
+                x3 = int(np.mean(linhas_e_x1))
+                x4 = int(np.mean(linhas_e_x2))
+                y3 = int(np.mean(linhas_e_y1))
+                y4 = int(np.mean(linhas_e_y2))
+                cv2.line(frame,(x3,y3), (x4,y4), (50,0,255),2) 
 
             #ponto de intersecção
             if x1!=0 and x2!=0 and x3!=0 and x4!=0:
@@ -125,10 +129,9 @@ def pto_fuga(frame):
                 py = int(((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-x4*y3))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)))
                 cv2.circle(frame, (px, py), 1, (0,255,0), 5)
                 pto = (px, py)
-                return pto
 
-            cv2.imshow("Vídeo", frame)
+    # ver posicao 0, colocar em variavel, acessar variavel
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-            # ver posicao 0, colocar em variavel, acessar variavel
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+    return pto, linhas_e_m, linhas_d_m

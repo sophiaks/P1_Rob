@@ -4,7 +4,6 @@
 from __future__ import print_function, division
 import rospy
 import numpy as np
-import numpy
 import tf
 import math
 import cv2
@@ -21,7 +20,6 @@ from ar_track_alvar_msgs.msg import AlvarMarker, AlvarMarkers
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
-from numpy import linalg
 from tf import transformations
 from tf import TransformerROS
 import tf2_ros
@@ -33,13 +31,8 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 
 import visao_module
-from pto_fuga import pto_fuga
-from encontra_pista import encontra_pista
-
-# import pto_fuga
-# operator = pto_fuga.pto_fuga()
-
-
+import pto_fuga
+import encontra_pista
 
 bridge = CvBridge()
 
@@ -47,7 +40,6 @@ cv_image = None
 media = []
 centro = []
 atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
-
 
 area = 0.0 # Variavel com a area do maior contorno
 
@@ -108,7 +100,10 @@ def recebe(msg):
 		# Terminamos
 		print("id: {} x {} y {} z {} angulo {} ".format(id, x,y,z, angulo_marcador_robo))
 
-
+linhas1 = None
+linhas2 = None
+pto = []
+ratio = None
 
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
@@ -118,88 +113,92 @@ def roda_todo_frame(imagem):
     global centro
 
     global resultados
-
+    global ratio
+    global pto
+    global linhas1
+    global linhas2
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
     lag = now-imgtime # calcula o lag
     delay = lag.nsecs
-    # print("delay ", "{:.3f}".format(delay/1.0E9))
+
+    print("delay ", "{:.3f}".format(delay/1.0E9))
     if delay > atraso and check_delay==True:
         print("Descartando por causa do delay do frame:", delay)
         return 
     try:
         antes = time.clock()
+
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
 
-        pto = pto_fuga(cv_image)
-        
-        ratio = encontra_pista(cv_image)
-
         centro, imagem, resultados =  visao_module.processa(cv_image)        
-        for r in resultados:
-            # print(r) - print feito para documentar e entender
-            # o resultado            
-            pass
+    
+        #COMO ASSIM ELE NÃO TÁ DEFININDO
+        pto, linhas1, linhas2 = pto_fuga.func_pto(cv_image)
+
+        ratio = encontra_pista.func_pista(cv_image)
+        print(ratio)
 
         depois = time.clock()
-        # Desnecessário - Hough e MobileNet já abrem janelas
-        #cv2.imshow("Camera", cv_image)
+
+        cv2.imshow("Camera", cv_image)
+
     except CvBridgeError as e:
         print('ex', e)
     
-if __name__=="__main__":
+if __name__ == "__main__":
     rospy.init_node("cor")
 
     topico_imagem = "/camera/rgb/image_raw/compressed"
 
-    recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
-    recebedor = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe) # Para recebermos notificacoes de que marcadores foram vistos
+    recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size=2**24)
+    recebedor = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe) 
+    # Para recebermos notificacoes de que marcadores foram visto
 
 
     print("Usando ", topico_imagem)
 
-    velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
-
+    velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
     tolerancia = 25
 
-    # Exemplo de categoria de resultados
-    # [('chair', 86.965459585189819, (90, 141), (177, 265))]
-
     try:
         # Inicializando - por default gira no sentido anti-horário
-        #vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
-        
+        vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.1))
+        print("GIRANDO GIRANDO GIRANDO PRA UM LADO")
         while not rospy.is_shutdown():
             for r in resultados:
                 print(r)
-            # Enquanto n~ao houver linhas quase verticais, o rob^o gira e anda pra frente
-            while len(linhas_e_m) = 0 and len(linhas_e_d) =0:
-                vel = Twist(Vector3(0.2,0,0), Vector3(0,0,-0.1))
-                # Se a quantidade de branco for grande o suficiente, o rob^o para de andar e comeca a girar para encontrar o pto de fuga
-                if  ratio > 0.4:
-                    vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.1))
-                    break
-
+            # Enquanto não houver linhas quase verticais, o robô gira e anda pra frente
+            if linhas1 == None and linhas2 == None:
+                #print("COMEÇOU A PROCURAR AS LINHAS")
+                vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
+                # Se a quantidade de branco for grande o suficiente, 
+                # o robô para de andar e comeca a girar para encontrar o pto de fuga
+                print("RODA RODA JEQUITI")
+                velocidade_saida.publish(vel)
+            if ratio > 0.4:
+                vel = Twist(Vector3(0,0,0), Vector3(0,0, 0))
+                print("Achou")
+                break
             # Se houver um ponto de fuga (achou linhas quase verticais)
             while len(pto) != 0:
+                print("centralizando")
                 #Centralizar no ponto de fuga e andar pra frente
-                if pto[0] > cv_image.shape[0] + 10 
-                    vel = Twist(Vector3(0.2,0,0), Vector3(0,0,-0.1))
+                if pto[0] > cv_image.shape[0] + 10:
+                    vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.1))
+                    velocidade_saida.publish(vel)
                 if pto[0] < cv_image.shape[0] - 10:
-                    vel = Twist(Vector3(0.2,0,0), Vector3(0,0,0.1))
+                    vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.1))
+                    velocidade_saida.publish(vel)
                 if ratio > 0.4:
-
-            
-
-
-
-            #velocidade_saida.publish(vel)
-            rospy.sleep(0.1)
+                    vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
+                    velocidade_saida.publish(vel)
+                    print("Parando")
+        
+        velocidade_saida.publish(vel)
+        rospy.sleep(0.1)
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
-        
-
-

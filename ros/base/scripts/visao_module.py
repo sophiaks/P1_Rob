@@ -25,14 +25,13 @@ def processa(frame):
 
     centro = (frame.shape[1]//2, frame.shape[0]//2)
 
-
     def cross(img_rgb, point, color, width,length):
         cv2.line(img_rgb, (point[0] - int(length/2), point[1]),  (point[0] + int(length/2), point[1]), color ,width, length)
         cv2.line(img_rgb, (point[0], point[1] - int(length/2)), (point[0], point[1] + int(length/2)),color ,width, length)
 
     cross(result_frame, centro, [255,0,0], 1, 17)
 
-    cv2.imshow('video', result_frame)
+    # cv2.imshow('video', result_frame)
     cv2.waitKey(1)
 
     return centro, result_frame, result_tuples
@@ -104,8 +103,8 @@ def identifica_cor(frame):
     cv2.putText(frame,"{:d} {:d}".format(*media),(20,100), 1, 4,(255,255,255),2,cv2.LINE_AA)
     cv2.putText(frame,"{:0.1f}".format(maior_contorno_area),(20,50), 1, 4,(255,255,255),2,cv2.LINE_AA)
 
-    cv2.imshow('video', frame)
-    cv2.imshow('seg', segmentado_cor)
+    # cv2.imshow('video', frame)
+    # cv2.imshow('seg', segmentado_cor)
     cv2.waitKey(1)
 
     return centro, result_frame, result_tuples
