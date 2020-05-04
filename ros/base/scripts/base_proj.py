@@ -5,25 +5,17 @@ from __future__ import print_function, division
 import rospy
 import numpy as np
 import tf
-import math
 import cv2
 import time
-from nav_msgs.msg import Odometry
+import tf2_ros
+import math
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
 from numpy import linalg
-from tf import transformations
-from tf import TransformerROS
-import tf2_ros
-from geometry_msgs.msg import Twist, Vector3, Pose, Vector3Stamped
-from ar_track_alvar_msgs.msg import AlvarMarker, AlvarMarkers
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 from tf import transformations
 from tf import TransformerROS
-import tf2_ros
-import math
+
 from geometry_msgs.msg import Twist, Vector3, Pose, Vector3Stamped
 from ar_track_alvar_msgs.msg import AlvarMarker, AlvarMarkers
 from nav_msgs.msg import Odometry
@@ -60,6 +52,9 @@ frame = "camera_link"
 tfl = 0
 
 tf_buffer = tf2_ros.Buffer()
+
+
+#________________________________________________RECEBE_________________________________________#
 
 
 def recebe(msg):
@@ -106,6 +101,9 @@ pto = []
 ratio = None
 
 # A função a seguir é chamada sempre que chega um novo frame
+
+#____________________________________________________RODA_TODO_FRAME____________________________________________________#
+
 def roda_todo_frame(imagem):
     print("frame")
     global cv_image
@@ -134,7 +132,6 @@ def roda_todo_frame(imagem):
 
         centro, imagem, resultados =  visao_module.processa(cv_image)        
     
-        #COMO ASSIM ELE NÃO TÁ DEFININDO
         pto, linhas1, linhas2 = pto_fuga.func_pto(cv_image)
 
         ratio = encontra_pista.func_pista(cv_image)
@@ -142,10 +139,20 @@ def roda_todo_frame(imagem):
 
         depois = time.clock()
 
+        w, h = cv_image.shape()
+
+        cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
+        cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
+        cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
+
         cv2.imshow("Camera", cv_image)
 
     except CvBridgeError as e:
         print('ex', e)
+
+
+#_______________________________________________________MAIN______________________________________________________#
+
     
 if __name__ == "__main__":
     rospy.init_node("cor")
@@ -154,8 +161,6 @@ if __name__ == "__main__":
 
     recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size=2**24)
     recebedor = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe) 
-    # Para recebermos notificacoes de que marcadores foram visto
-
 
     print("Usando ", topico_imagem)
 
@@ -165,40 +170,42 @@ if __name__ == "__main__":
 
     try:
         # Inicializando - por default gira no sentido anti-horário
-        vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.1))
-        print("GIRANDO GIRANDO GIRANDO PRA UM LADO")
+
         while not rospy.is_shutdown():
-            for r in resultados:
-                print(r)
-            # Enquanto não houver linhas quase verticais, o robô gira e anda pra frente
-            if linhas1 == None and linhas2 == None:
-                #print("COMEÇOU A PROCURAR AS LINHAS")
-                vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
-                # Se a quantidade de branco for grande o suficiente, 
-                # o robô para de andar e comeca a girar para encontrar o pto de fuga
-                print("RODA RODA JEQUITI")
-                velocidade_saida.publish(vel)
-            if ratio > 0.4:
-                vel = Twist(Vector3(0,0,0), Vector3(0,0, 0))
-                print("Achou")
-                break
-            # Se houver um ponto de fuga (achou linhas quase verticais)
-            while len(pto) != 0:
-                print("centralizando")
-                #Centralizar no ponto de fuga e andar pra frente
-                if pto[0] > cv_image.shape[0] + 10:
-                    vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.1))
-                    velocidade_saida.publish(vel)
-                if pto[0] < cv_image.shape[0] - 10:
-                    vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.1))
-                    velocidade_saida.publish(vel)
+            # for r in resultados:
+            #     print(r)
+                
+            if linhas1 == None or linhas2 == None:
+                print("Nenhuma linha encontrada")
                 if ratio > 0.4:
-                    vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
-                    velocidade_saida.publish(vel)
                     print("Parando")
-        
-        velocidade_saida.publish(vel)
-        rospy.sleep(0.1)
+                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+                    pass
+                else:
+                    print("Procurando linhas")
+                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, - math.pi/2))
+
+            else:
+                #Centralizar no ponto de fuga e andar pra frente
+
+                print("Ponto de fuga encontrado")
+
+                if pto[0] > cv_image.shape[0]/2 + 10:
+                    vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.1))
+                elif pto[0] < cv_image.shape[0]/2 - 10:
+                    vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.1))
+                else:
+                    vel = Twist(Vector3(0.1,0,0), Vector3(0,0, 0))
+
+                #ALGUEM DA UM JEITO NESSE CODIGO OK? BJS
+
+            if cv_image is not None:
+                # Note que o imshow precisa ficar *ou* no codigo de tratamento de eventos *ou* no thread principal, não em ambos
+                cv2.imshow("cv_image no loop principal", cv_image)
+                cv2.waitKey(1)
+            
+            velocidade_saida.publish(vel)
+            rospy.sleep(0.1)
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")

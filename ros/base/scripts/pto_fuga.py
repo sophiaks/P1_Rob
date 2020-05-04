@@ -64,30 +64,22 @@ def func_pto(frame):
                     lista_m.append(m)
 
                     #direita
-                    if m>0.3 and m<2:
-                        linhas_d_m.append(m)
-                        linhas_d_x1.append(x1)
-                        linhas_d_x2.append(x2)
-                        linhas_d_y1.append(y1)
-                        linhas_d_y2.append(y2)
-                        linhas_d_h.append(h)
+                    linhas_d_m.append(m)
+                    linhas_d_x1.append(x1)
+                    linhas_d_x2.append(x2)
+                    linhas_d_y1.append(y1)
+                    linhas_d_y2.append(y2)
+                    linhas_d_h.append(h)
 
 
                     #esquerda
-                    elif m<-0.2 and m>-2:
-                        linhas_e_m.append(m)
-                        linhas_e_x1.append(x1)
-                        linhas_e_x2.append(x2)
-                        linhas_e_y1.append(y1)
-                        linhas_e_y2.append(y2)
-                        linhas_e_h.append(h)
-                    
-                    else:
-                        lista_m.remove(m) 
-                        lista_h.remove(h)
+                    linhas_e_m.append(m)
+                    linhas_e_x1.append(x1)
+                    linhas_e_x2.append(x2)
+                    linhas_e_y1.append(y1)
+                    linhas_e_y2.append(y2)
+                    linhas_e_h.append(h)
 
-
-                    
                 
             if len(lista_m) > 1 and lista_m[0] != lista_m[1]:
                 x_i = (lista_h[1] - lista_h[0])/(lista_m[0] - lista_m[1])
@@ -96,7 +88,6 @@ def func_pto(frame):
                 y_i = int(y_i)
                 xis.append(x_i)
                 yis.append(y_i)
-
 
             x1 = 0
             x2 = 0

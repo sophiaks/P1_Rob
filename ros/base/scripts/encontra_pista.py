@@ -6,9 +6,6 @@ from __future__ import division, print_function
 
 import cv2
 import numpy as np
-import math
-from matplotlib import pyplot as plt
-import time
 
 cor_menor = np.array([240, 240, 240], dtype=np.uint8)
 cor_maior = np.array([255, 255, 255], dtype=np.uint8)
