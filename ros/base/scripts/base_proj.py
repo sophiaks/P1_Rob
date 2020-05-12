@@ -258,6 +258,9 @@ if __name__ == "__main__":
                             
                         ptom = tuple(ptom)
 
+                        cv2.imshow("cv_image no loop principal", cv_image)
+                        cv2.waitKey(1)
+
                         if pto[0] > cv_image.shape[0]/2 + 10:
                             vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
 
