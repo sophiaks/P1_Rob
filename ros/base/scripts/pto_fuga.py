@@ -15,7 +15,7 @@ cor_maior = np.array([255, 255, 255], dtype=np.uint8)
 
 #TypeError: Expected Ptr<cv::UMat> for argument '%s'
 
-
+global mask_white
 
 def func_pto(frame):
     '''Use esta função para encontrar o ponto de fuga'''
@@ -89,6 +89,7 @@ def func_pto(frame):
                 xis.append(x_i)
                 yis.append(y_i)
 
+
             x1 = 0
             x2 = 0
             x3 = 0
@@ -125,4 +126,4 @@ def func_pto(frame):
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    return pto, linhas_e_m, linhas_d_m
+    return pto, linhas_e_m, linhas_d_m, mask_white

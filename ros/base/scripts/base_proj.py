@@ -26,6 +26,7 @@ import visao_module
 import pto_fuga
 import encontra_pista
 
+
 bridge = CvBridge()
 
 cv_image = None
@@ -51,7 +52,7 @@ frame = "camera_link"
 
 tfl = 0
 
-tf_buffer = tf2_ros.Buffer()
+# tf_buffer = tf2_ros.Buffer()
 
 
 #________________________________________________RECEBE_________________________________________#
@@ -115,6 +116,7 @@ def roda_todo_frame(imagem):
     global pto
     global linhas1
     global linhas2
+    
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
@@ -138,12 +140,6 @@ def roda_todo_frame(imagem):
         print(ratio)
 
         depois = time.clock()
-
-        w, h = cv_image.shape()
-
-        cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
-        cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
-        cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
 
         cv2.imshow("Camera", cv_image)
 
@@ -170,40 +166,29 @@ if __name__ == "__main__":
 
     try:
         # Inicializando - por default gira no sentido anti-horário
-
+        vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
         while not rospy.is_shutdown():
             # for r in resultados:
             #     print(r)
-                
-            if linhas1 == None or linhas2 == None:
-                print("Nenhuma linha encontrada")
-                if ratio > 0.4:
-                    print("Parando")
-                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
-                    pass
-                else:
-                    print("Procurando linhas")
-                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, - math.pi/2))
-
-            else:
-                #Centralizar no ponto de fuga e andar pra frente
-
-                print("Ponto de fuga encontrado")
-
-                if pto[0] > cv_image.shape[0]/2 + 10:
-                    vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.1))
-                elif pto[0] < cv_image.shape[0]/2 - 10:
-                    vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.1))
-                else:
-                    vel = Twist(Vector3(0.1,0,0), Vector3(0,0, 0))
-
-                #ALGUEM DA UM JEITO NESSE CODIGO OK? BJS
-
             if cv_image is not None:
                 # Note que o imshow precisa ficar *ou* no codigo de tratamento de eventos *ou* no thread principal, não em ambos
                 cv2.imshow("cv_image no loop principal", cv_image)
                 cv2.waitKey(1)
-            
+
+                if len(pto) > 0:
+                    if pto[0] > cv_image.shape[0]/2 + 10:
+                        vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
+                    elif pto[0] < cv_image.shape[0]/2 - 10:
+                        vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
+                    else:
+                        vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
+
+                    w, h = cv_image.shape()
+
+                    cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
+                    cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
+                    cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
+                
             velocidade_saida.publish(vel)
             rospy.sleep(0.1)
 
