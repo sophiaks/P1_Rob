@@ -47,8 +47,8 @@ y = 0
 z = 0 
 id = 0
 
-frame = "camera_link"
-#frame = "head_camera"  # DESCOMENTE para usar com webcam USB via roslaunch tag_tracking usbcam
+#frame = "camera_link"
+frame = "head_camera"  # DESCOMENTE para usar com webcam USB via roslaunch tag_tracking usbcam
 
 tfl = 0
 

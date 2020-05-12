@@ -184,6 +184,9 @@ if __name__=="__main__":
 				lines = cv2.HoughLines(mask,1,np.pi/180,200)
 			
 			if lines is not None:
+
+				print("lines")
+
 				for line in lines:  
 					for rho,theta in line:
 						a = np.cos(theta)
@@ -218,16 +221,6 @@ if __name__=="__main__":
 							pi = pto_fuga.line_intersecion(line1, line2)
 							ptos.append(pi)
 
-			for r in resultados:
-				print("opa")
-			velocidade_saida.publish(vel)
-			#1. Manter o robô na pista usando O código do pto de fuga
-			if id != lista_quero[1] or id == None:
-				if id == None:
-					print("nenhum id encontrado")
-				# Segue o código do ponto de fuga
-				print(lista_quero[1], id)
-
 				if len(ptos) > 0:
 					# ptos = np.array(ptos)
 					print(ptos)
@@ -256,6 +249,20 @@ if __name__=="__main__":
 						
 				else:
 						print("Não achou o ponto de fuga")
+
+
+
+			for r in resultados:
+				print("opa")
+			velocidade_saida.publish(vel)
+			#1. Manter o robô na pista usando O código do pto de fuga
+			if id != lista_quero[1] or id == None:
+				if id == None:
+					print("nenhum id encontrado")
+				# Segue o código do ponto de fuga
+				print(lista_quero[1], id)
+
+
 
 			else: 
 				if id == lista_quero[1]:
