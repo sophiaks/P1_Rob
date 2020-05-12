@@ -52,7 +52,7 @@ frame = "camera_link"
 
 tfl = 0
 
-# tf_buffer = tf2_ros.Buffer()
+tf_buffer = tf2_ros.Buffer()
 
 
 #________________________________________________RECEBE_________________________________________#
@@ -170,7 +170,96 @@ if __name__ == "__main__":
         while not rospy.is_shutdown():
             # for r in resultados:
             #     print(r)
+
             if cv_image is not None:
+                img_hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+
+                gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+                blur = cv2.GaussianBlur(gray,(5,5),0)
+
+                bordas = cv2.Canny(blur,50,150,apertureSize = 3)
+                bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR)  
+
+                lines = []
+                
+                lines = None
+                
+                mask = cv2.inRange(bordas_color, pto_fuga.cor_menor, pto_fuga.cor_maior) 
+                
+                lines = cv2.HoughLines(mask,1,np.pi/180,200)
+                
+                #framed = None 
+                
+                line1 = None
+                line2 = None
+                
+                ptos = []  
+
+                for line in lines:            
+                    
+                    for rho,theta in line:
+                        
+                        a = np.cos(theta)
+                        b = np.sin(theta)
+                        x0 = a*rho
+                        y0 = b*rho
+                        x1 = int(x0 + 3000*(-b))
+                        y1 = int(y0 + 3000*(a))
+                        x2 = int(x0 - 3000*(-b))
+                        y2 = int(y0 - 3000*(a))                
+
+                        
+                        if x2 != x1:
+                            m = (y1-y0)/(x1-x0)
+                        
+                        h = y0 - (m * x0)      
+                        p1 = (x1,y1)
+                        p2 = (x2,y2)
+                            
+                        
+                        if m < -0.4 and m > -1.4:
+                            cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
+                            line1 = (p1, p2)
+                            
+                        elif m > 0.3 and m < 2.1:
+                            cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
+                            line2 = (p1, p2)                   
+                            
+                            
+                        if line1 is not None and line2 is not None:
+                            
+                            pi = pto_fuga.line_intersecion(line1, line2)
+                            ptos.append(pi)   
+
+
+                if len(ptos)> 0:
+                    
+                    ptos = np.array(ptos)
+                    
+                    print(ptos)
+                                            
+                    
+                    if len(ptos) > 1:
+                        ptom = ptos.mean(axis = 0)  
+                        
+                    else:
+                        ptom = ptos[0]
+                    
+                    
+                    ptom[0] = int(ptom[0])
+                    ptom[1] = int(ptom[1])                   
+                    
+                        
+                    ptom = tuple(ptom)
+                        
+                    cv2.circle(frame, (int(ptom[0]), int(ptom[1])), 3, (255,0,0), 2)  
+
+
+
+
+
+
+
                 # Note que o imshow precisa ficar *ou* no codigo de tratamento de eventos *ou* no thread principal, não em ambos
                 cv2.imshow("cv_image no loop principal", cv_image)
                 cv2.waitKey(1)
