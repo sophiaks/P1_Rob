@@ -48,7 +48,7 @@ z = 0
 id = 0
 
 frame = "camera_link"
-# frame = "head_camera"  # DESCOMENTE para usar com webcam USB via roslaunch tag_tracking usbcam
+#frame = "head_camera"  # DESCOMENTE para usar com webcam USB via roslaunch tag_tracking usbcam
 
 tfl = 0
 
@@ -63,6 +63,7 @@ def recebe(msg):
 	global y
 	global z
 	global id
+
 	for marker in msg.markers:
 		id = marker.id
 		marcador = "ar_marker_" + str(id)
@@ -96,58 +97,57 @@ def recebe(msg):
         # Terminamos
         print("id: {} x {} y {} z {} angulo {} ".format(id, x,y,z, angulo_marcador_robo))
 
-linhas1 = None
-linhas2 = None
-pto = []
-ratio = None
+
 
 # A função a seguir é chamada sempre que chega um novo frame
 
 #____________________________________________________RODA_TODO_FRAME____________________________________________________#
 
+
+linhas1 = None
+linhas2 = None
+pto = []
+ratio = None
+   
 def roda_todo_frame(imagem):
     print("frame")
     global cv_image
     global media
     global centro
-
-    global resultados
-    global ratio
-    global pto
-    global linhas1
-    global linhas2
-    
+    # global resultados
+    # global ratio
+    # global pto
+    # global linhas1
+    # global linhas2
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
     lag = now-imgtime # calcula o lag
     delay = lag.nsecs
-
-    print("delay ", "{:.3f}".format(delay/1.0E9))
+    # print("delay ", "{:.3f}".format(delay/1.0E9))
     if delay > atraso and check_delay==True:
         print("Descartando por causa do delay do frame:", delay)
         return 
     try:
         antes = time.clock()
-
-        cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
-
-        centro, imagem, resultados =  visao_module.processa(cv_image)        
-    
-        pto, linhas1, linhas2 = pto_fuga.func_pto(cv_image)
-
-        ratio = encontra_pista.func_pista(cv_image)
-        print(ratio)
+        temp_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
+        # Note que os resultados já são guardados automaticamente na variável
+        # chamada resultados
+        centro, saida_net, resultados =  visao_module.processa(temp_image)        
+        for r in resultados:
+            # print(r) - print feito para documentar e entender
+            # o resultado            
+            pass
 
         depois = time.clock()
-
-        cv2.imshow("Camera", cv_image)
-
+        # Desnecessário - Hough e MobileNet já abrem janelas
+        cv_image = saida_net.copy()
     except CvBridgeError as e:
         print('ex', e)
 
 
 #_______________________________________________________MAIN______________________________________________________#
+
 
     
 if __name__ == "__main__":
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     topico_imagem = "/camera/rgb/image_raw/compressed"
 
     recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size=2**24)
-    recebedor = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe) 
+    #recebedor = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe) 
 
     print("Usando ", topico_imagem)
 
@@ -169,21 +169,28 @@ if __name__ == "__main__":
         vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
         while not rospy.is_shutdown():
             # for r in resultados:
-            #     print(r)
+            #     print(r)    
+            # 
 
-            if cv_image is not None: 
+            #ratio = None
 
-                img_hsv = cv2.cvtColor(cv2.UMat(cv_image), cv2.COLOR_BGR2HSV)
+            lines = []
+            lines = None     
 
-                gray = cv2.cvtColor(cv2.UMat(cv_image), cv2.COLOR_BGR2GRAY)
+            line1 = None
+            line2 = None
+            ptos = []  
+
+
+                
+            if cv_image is not None:
+                gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
                 blur = cv2.GaussianBlur(gray,(5,5),0)
 
                 bordas = cv2.Canny(blur,50,150,apertureSize = 3)
                 bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR)  
 
-                lines = []
-                
-                lines = None
+
                 
                 mask = cv2.inRange(bordas_color, pto_fuga.cor_menor, pto_fuga.cor_maior) 
                 
@@ -191,83 +198,84 @@ if __name__ == "__main__":
                 
                 #framed = None 
                 
-                line1 = None
-                line2 = None
-                
-                ptos = []  
 
-                for line in lines:            
-                    
-                    for rho,theta in line:
-                        
-                        a = np.cos(theta)
-                        b = np.sin(theta)
-                        x0 = a*rho
-                        y0 = b*rho
-                        x1 = int(x0 + 3000*(-b))
-                        y1 = int(y0 + 3000*(a))
-                        x2 = int(x0 - 3000*(-b))
-                        y2 = int(y0 - 3000*(a))                
+                if lines is not None:
 
+                    for line in lines:            
                         
-                        if x2 != x1:
-                            m = (y1-y0)/(x1-x0)
-                        
-                        h = y0 - (m * x0)      
-                        p1 = (x1,y1)
-                        p2 = (x2,y2)
+                        for rho,theta in line:
                             
-                        
-                        if m < -0.4 and m > -1.4:
-                            cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
-                            line1 = (p1, p2)
+                            a = np.cos(theta)
+                            b = np.sin(theta)
+                            x0 = a*rho
+                            y0 = b*rho
+                            x1 = int(x0 + 3000*(-b))
+                            y1 = int(y0 + 3000*(a))
+                            x2 = int(x0 - 3000*(-b))
+                            y2 = int(y0 - 3000*(a))                
+
                             
-                        elif m > 0.3 and m < 2.1:
-                            cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
-                            line2 = (p1, p2)                   
+                            if x2 != x1:
+                                m = (y1-y0)/(x1-x0)
                             
+                            h = y0 - (m * x0)      
+                            p1 = (x1,y1)
+                            p2 = (x2,y2)
+                                
                             
-                        if line1 is not None and line2 is not None:
+                            if m < -0.4 and m > -1.4:
+                                cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
+                                line1 = (p1, p2)
+                                
+                            elif m > 0.3 and m < 2.1:
+                                cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
+                                line2 = (p1, p2)                   
+                                
+                                
+                            if line1 is not None and line2 is not None:
+                                
+                                pi = pto_fuga.line_intersecion(line1, line2)
+                                ptos.append(pi)
+
+
+                    if len(ptos)> 0:
+                        
+                        ptos = np.array(ptos)
+                        
+                        print(ptos)
+                                                
+                        
+                        if len(ptos) > 1:
+                            ptom = ptos.mean(axis = 0)  
                             
-                            pi = pto_fuga.line_intersecion(line1, line2)
-                            ptos.append(pi) 
-
-
-
-
-
-                if len(ptos)> 0:
-                    
-                    ptos = np.array(ptos)
-                    
-                    print(ptos)
-                                            
-                    
-                    if len(ptos) > 1:
-                        ptom = ptos.mean(axis = 0)  
+                        else:
+                            ptom = ptos[0]
                         
-                    else:
-                        ptom = ptos[0]
-                    
-                    
-                    ptom[0] = int(ptom[0])
-                    ptom[1] = int(ptom[1])                   
-                    
                         
-                    ptom = tuple(ptom)
-
-                    if pto[0] > cv_image.shape[0]/2 + 10:
-                        vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
-
-                    elif pto[0] < cv_image.shape[0]/2 - 10:
-                        vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
-                    
-                    else:
-                        vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
-
-                    w, h = cv_image.shape()                    
+                        ptom[0] = int(ptom[0])
+                        ptom[1] = int(ptom[1])                   
                         
-                    cv2.circle(frame, (int(ptom[0]), int(ptom[1])), 3, (255,0,0), 2)    
+                            
+                        ptom = tuple(ptom)
+
+                        if pto[0] > cv_image.shape[0]/2 + 10:
+                            vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
+
+                        elif pto[0] < cv_image.shape[0]/2 - 10:
+                            vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
+                        
+                        else:
+                            vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
+
+                        w, h = cv_image.shape()                    
+                            
+                        cv2.circle(cv_image, (int(ptom[0]), int(ptom[1])), 3, (255,0,0), 2)    
+
+                        cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
+                        cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
+                        cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
+
+                    
 
 
             #if cv_image is not None:
@@ -287,10 +295,11 @@ if __name__ == "__main__":
 
                 #     w, h = cv_image.shape()
 
-                #     cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
-                #     cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
-                #     cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
-                
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+
             velocidade_saida.publish(vel)
             rospy.sleep(0.1)
 
