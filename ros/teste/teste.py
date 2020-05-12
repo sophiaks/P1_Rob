@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
-
+from __future__ import print_function, division
 __author__ = ["Rachel P. B. Moraes", "Igor Montagner", "Fabio Miranda"]
 
 
@@ -15,7 +15,6 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, CompressedImage, LaserScan
 from cv_bridge import CvBridge, CvBridgeError
 import cormodule
-from __future__ import print_function, division
 import rospy
 from numpy import linalg
 from tf import transformations
@@ -122,11 +121,11 @@ def roda_todo_frame(imagem):
 		cv_image = cv2.flip(cv_image, -1)
         
 		media, centro, maior_area =  cormodule.identifica_cor(cv_image)
-        centro, saida_net, resultados =  visao_module.processa(temp_image)
-        for r in resultados:
-            print(r)
-            pass
-        depois = time.clock()
+		centro, saida_net, resultados =  visao_module.processa(temp_image)
+		for r in resultados:
+			print(r)
+			pass
+		depois = time.clock()
 		cv2.imshow("Camera", cv_image)
 
 
@@ -143,68 +142,68 @@ if __name__=="__main__":
 
 	velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
 	recebedor = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe) # Para recebermos notificacoes de que marcadores foram vistos
-    recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
+	recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
 	
-    print("Usando ", topico_imagem)
+	print("Usando ", topico_imagem)
 	
-    dist = rospy.Subscriber(("/scan"), LaserScan, funcscan)
-    tfl = tf2_ros.TransformListener(tf_buffer)
-    tolerancia = 25
+	dist = rospy.Subscriber(("/scan"), LaserScan, funcscan)
+	tfl = tf2_ros.TransformListener(tf_buffer)
+	tolerancia = 25
 
 	try:
-        tfl = tf2_ros.TransformListener(tf_buffer)
-        vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
+		tfl = tf2_ros.TransformListener(tf_buffer)
+		vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
 
 		while not rospy.is_shutdown():
-            for r in resultados:
-                print("opa")
-            velocidade_saida.publish(vel)
-            #1. Manter o robô na pista usando O código do pto de fuga
-            if id is None:
-                # Segue o código do ponto de fuga
-                if len(pto) > 0: #Se tiver um ponto de fuga
-                    if pto[0] > cv_image.shape[0]/2 + 10:
-                        vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
-                    elif pto[0] < cv_image.shape[0]/2 - 10:
-                        vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
-                    else:
-                        vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
+			for r in resultados:
+				print("opa")
+			velocidade_saida.publish(vel)
+			#1. Manter o robô na pista usando O código do pto de fuga
+			if id is None:
+				# Segue o código do ponto de fuga
+				if len(pto) > 0: #Se tiver um ponto de fuga
+					if pto[0] > cv_image.shape[0]/2 + 10:
+						vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
+					elif pto[0] < cv_image.shape[0]/2 - 10:
+						vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
+					else:
+						vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
 
 					#Fazendo linhas de limitis
-                    w, h = cv_image.shape()
-                    cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
-                    cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
-                    cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
+					w, h = cv_image.shape()
+					cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
+					cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
+					cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
 
-            # for value in laser:
-            # 	print("nice")
-            # 	if value < 1.75:
-            # 		vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
-            # 		velocidade_saida.publish(vel)
+			# for value in laser:
+			# 	print("nice")
+			# 	if value < 1.75:
+			# 		vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
+			# 		velocidade_saida.publish(vel)
 
-            # else:
-            #     if len(media) != 0 and len(centro) != 0:
-            #         print("Média dos verdes: {0}, {1}".format(media[0], media[1]))
-            #         print("Centro dos verdes: {0}, {1}".format(centro[0], centro[1]))
-            #         if (media[0] > centro[0]):
-            #             vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.3))
-            #             if (media[0] - centro[0]) < 10:
-            #                 vel = Twist(Vector3(0.3,0,0), Vector3(0,0,0))
-                        
+			# else:
+			#     if len(media) != 0 and len(centro) != 0:
+			#         print("Média dos verdes: {0}, {1}".format(media[0], media[1]))
+			#         print("Centro dos verdes: {0}, {1}".format(centro[0], centro[1]))
+			#         if (media[0] > centro[0]):
+			#             vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.3))
+			#             if (media[0] - centro[0]) < 10:
+			#                 vel = Twist(Vector3(0.3,0,0), Vector3(0,0,0))
+						
 
-            #         if (media[0] < centro[0]):
-            #             vel = Twist(Vector3(0,0,0), Vector3(0,0,0.5))
-            #             if (centro[0] - media[0]) < 10:
-            #                 vel = Twist(Vector3(0.3,0,0), Vector3(0,0,0))
+			#         if (media[0] < centro[0]):
+			#             vel = Twist(Vector3(0,0,0), Vector3(0,0,0.5))
+			#             if (centro[0] - media[0]) < 10:
+			#                 vel = Twist(Vector3(0.3,0,0), Vector3(0,0,0))
 
-            else: 
-                for item in lista_quero:
-                    if id == item:
-                        print(olá)
+			else: 
+				for item in lista_quero:
+					if id == item:
+						print("olá")
 
 			#Alinhado com o while not shutdown 
-            velocidade_saida.publish(vel)
+			velocidade_saida.publish(vel)
 			rospy.sleep(0.1)
 
 	except rospy.ROSInterruptException:
-	    print("Ocorreu uma exceção com o rospy")
+		print("Ocorreu uma exceção com o rospy")

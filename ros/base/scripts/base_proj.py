@@ -71,30 +71,30 @@ def recebe(msg):
 		header = Header(frame_id=marcador)
 		# Procura a transformacao em sistema de coordenadas entre a base do robo e o marcador numero 100
 		# Note que para seu projeto 1 voce nao vai precisar de nada que tem abaixo, a 
-		# Nao ser que queira levar angulos em conta
-		trans = tf_buffer.lookup_transform(frame, marcador, rospy.Time(0))
-		
-		# Separa as translacoes das rotacoes
-		x = trans.transform.translation.x
-		y = trans.transform.translation.y
-		z = trans.transform.translation.z
-		# ATENCAO: tudo o que vem a seguir e'  so para calcular um angulo
-		# Para medirmos o angulo entre marcador e robo vamos projetar o eixo Z do marcador (perpendicular) 
-		# no eixo X do robo (que e'  a direcao para a frente)
-		t = transformations.translation_matrix([x, y, z])
-		# Encontra as rotacoes e cria uma matriz de rotacao a partir dos quaternions
-		r = transformations.quaternion_matrix([trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w])
-		m = numpy.dot(r,t) # Criamos a matriz composta por translacoes e rotacoes
-		z_marker = [0,0,1,0] # Sao 4 coordenadas porque e'  um vetor em coordenadas homogeneas
-		v2 = numpy.dot(m, z_marker)
-		v2_n = v2[0:-1] # Descartamos a ultima posicao
-		n2 = v2_n/linalg.norm(v2_n) # Normalizamos o vetor
-		x_robo = [1,0,0]
-		cosa = numpy.dot(n2, x_robo) # Projecao do vetor normal ao marcador no x do robo
-		angulo_marcador_robo = math.degrees(math.acos(cosa))
+        # Nao ser que queira levar angulos em conta
+        trans = tf_buffer.lookup_transform(frame, marcador, rospy.Time(0))
 
-		# Terminamos
-		print("id: {} x {} y {} z {} angulo {} ".format(id, x,y,z, angulo_marcador_robo))
+        # Separa as translacoes das rotacoes
+        x = trans.transform.translation.x
+        y = trans.transform.translation.y
+        z = trans.transform.translation.z
+        # ATENCAO: tudo o que vem a seguir e'  so para calcular um angulo
+        # Para medirmos o angulo entre marcador e robo vamos projetar o eixo Z do marcador (perpendicular) 
+        # no eixo X do robo (que e'  a direcao para a frente)
+        t = transformations.translation_matrix([x, y, z])
+        # Encontra as rotacoes e cria uma matriz de rotacao a partir dos quaternions
+        r = transformations.quaternion_matrix([trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w])
+        m = numpy.dot(r,t) # Criamos a matriz composta por translacoes e rotacoes
+        z_marker = [0,0,1,0] # Sao 4 coordenadas porque e'  um vetor em coordenadas homogeneas
+        v2 = numpy.dot(m, z_marker)
+        v2_n = v2[0:-1] # Descartamos a ultima posicao
+        n2 = v2_n/linalg.norm(v2_n) # Normalizamos o vetor
+        x_robo = [1,0,0]
+        cosa = numpy.dot(n2, x_robo) # Projecao do vetor normal ao marcador no x do robo
+        angulo_marcador_robo = math.degrees(math.acos(cosa))
+
+        # Terminamos
+        print("id: {} x {} y {} z {} angulo {} ".format(id, x,y,z, angulo_marcador_robo))
 
 linhas1 = None
 linhas2 = None
