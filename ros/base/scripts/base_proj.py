@@ -171,10 +171,11 @@ if __name__ == "__main__":
             # for r in resultados:
             #     print(r)
 
-            if cv_image is not None:
-                img_hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+            if cv_image is not None: 
 
-                gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+                img_hsv = cv2.cvtColor(cv2.UMat(cv_image), cv2.COLOR_BGR2HSV)
+
+                gray = cv2.cvtColor(cv2.UMat(cv_image), cv2.COLOR_BGR2GRAY)
                 blur = cv2.GaussianBlur(gray,(5,5),0)
 
                 bordas = cv2.Canny(blur,50,150,apertureSize = 3)
@@ -229,7 +230,10 @@ if __name__ == "__main__":
                         if line1 is not None and line2 is not None:
                             
                             pi = pto_fuga.line_intersecion(line1, line2)
-                            ptos.append(pi)   
+                            ptos.append(pi) 
+
+
+
 
 
                 if len(ptos)> 0:
@@ -251,35 +255,46 @@ if __name__ == "__main__":
                     
                         
                     ptom = tuple(ptom)
-                        
-                    cv2.circle(frame, (int(ptom[0]), int(ptom[1])), 3, (255,0,0), 2)  
 
-
-
-
-
-
-
-                # Note que o imshow precisa ficar *ou* no codigo de tratamento de eventos *ou* no thread principal, não em ambos
-                cv2.imshow("cv_image no loop principal", cv_image)
-                cv2.waitKey(1)
-
-                if len(pto) > 0:
                     if pto[0] > cv_image.shape[0]/2 + 10:
                         vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
+
                     elif pto[0] < cv_image.shape[0]/2 - 10:
                         vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
+                    
                     else:
                         vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
 
-                    w, h = cv_image.shape()
+                    w, h = cv_image.shape()                    
+                        
+                    cv2.circle(frame, (int(ptom[0]), int(ptom[1])), 3, (255,0,0), 2)    
 
-                    cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
-                    cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
-                    cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
+
+            #if cv_image is not None:
+
+                
+                # Note que o imshow precisa ficar *ou* no codigo de tratamento de eventos *ou* no thread principal, não em ambos
+                #cv2.imshow("cv_image no loop principal", cv_image)
+                #cv2.waitKey(1)
+
+                # if len(pto) > 0:
+                #     if pto[0] > cv_image.shape[0]/2 + 10:
+                #         vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
+                #     elif pto[0] < cv_image.shape[0]/2 - 10:
+                #         vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
+                #     else:
+                #         vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
+
+                #     w, h = cv_image.shape()
+
+                #     cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
+                #     cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
+                #     cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
                 
             velocidade_saida.publish(vel)
             rospy.sleep(0.1)
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
+
+
