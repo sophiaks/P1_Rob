@@ -116,6 +116,7 @@ def roda_todo_frame(imagem):
     global pto
     global linhas1
     global linhas2
+    global cor
     
 
     now = rospy.get_rostime()

@@ -25,9 +25,12 @@ from std_msgs.msg import Header
 
 import visao_module
 
-lista_quero = []
+lista_quero = ['blue', 11, 'cat']
 laser = []
 resultados = []
+pto = []
+linha1 = None
+linha2 = None
 
 x = 0
 y = 0
@@ -41,7 +44,7 @@ def funcscan(msg):
 	print(laser)
 
 bridge = CvBridge()
-
+temp_image = None
 cv_image = None
 media = []
 centro = []
@@ -84,13 +87,13 @@ def recebe(msg):
 		t = transformations.translation_matrix([x, y, z])
 		# Encontra as rotacoes e cria uma matriz de rotacao a partir dos quaternions
 		r = transformations.quaternion_matrix([trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w])
-		m = numpy.dot(r,t) # Criamos a matriz composta por translacoes e rotacoes
+		m = np.dot(r,t) # Criamos a matriz composta por translacoes e rotacoes
 		z_marker = [0,0,1,0] # Sao 4 coordenadas porque e'  um vetor em coordenadas homogeneas
-		v2 = numpy.dot(m, z_marker)
+		v2 = np.dot(m, z_marker)
 		v2_n = v2[0:-1] # Descartamos a ultima posicao
 		n2 = v2_n/linalg.norm(v2_n) # Normalizamos o vetor
 		x_robo = [1,0,0]
-		cosa = numpy.dot(n2, x_robo) # Projecao do vetor normal ao marcador no x do robo
+		cosa = np.dot(n2, x_robo) # Projecao do vetor normal ao marcador no x do robo
 		angulo_marcador_robo = math.degrees(math.acos(cosa))
 
 		# Terminamos
@@ -106,6 +109,11 @@ def roda_todo_frame(imagem):
 	global resultados
 	global media
 	global centro
+	global temp_image
+
+	global pto
+	global linha1
+	global linha2
 
 	now = rospy.get_rostime()
 	imgtime = imagem.header.stamp
@@ -120,8 +128,9 @@ def roda_todo_frame(imagem):
 		cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
 		cv_image = cv2.flip(cv_image, -1)
         
-		media, centro, maior_area =  cormodule.identifica_cor(cv_image)
+		media, centro, maior_area =  cormodule.identifica_cor(cv_image, lista_quero[0])
 		centro, saida_net, resultados =  visao_module.processa(temp_image)
+		pto, linha1, linha2 = pto_fuga.pto_fuga(cv_image)
 		for r in resultados:
 			print(r)
 			pass
@@ -146,7 +155,7 @@ if __name__=="__main__":
 	
 	print("Usando ", topico_imagem)
 	
-	dist = rospy.Subscriber(("/scan"), LaserScan, funcscan)
+	# dist = rospy.Subscriber(("/scan"), LaserScan, funcscan)
 	tfl = tf2_ros.TransformListener(tf_buffer)
 	tolerancia = 25
 
@@ -159,27 +168,34 @@ if __name__=="__main__":
 				print("opa")
 			velocidade_saida.publish(vel)
 			#1. Manter o robô na pista usando O código do pto de fuga
-			if id is None:
+			if id != lista_quero[1]:
+				if id == None:
+					print("nenhum id encontrado")
 				# Segue o código do ponto de fuga
+				print(lista_quero[1], id)
 				if len(pto) > 0: #Se tiver um ponto de fuga
-					if pto[0] > cv_image.shape[0]/2 + 10:
-						vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
-					elif pto[0] < cv_image.shape[0]/2 - 10:
-						vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
+					print("x do ponto: {} y do ponto {}".format(pto[0], pto[1]))
+					if pto[0] > cv_image.shape[0]/2 + 15:
+						vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.2))
+						print("Velocidade atual: {}".format(vel))
+					elif pto[0] < cv_image.shape[0]/2 - 15:
+						vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.2))
+						print("Velocidade atual: {}".format(vel))
 					else:
-						vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
-
+						vel = Twist(Vector3(0.2,0,0), Vector3(0,0, 0))
+						print("Velocidade atual: {}".format(vel))
+						for value in laser:
+							if value < 0.75:
+								vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
+								velocidade_saida.publish(vel)
+						
 					#Fazendo linhas de limitis
 					w, h = cv_image.shape()
 					cv2.line(cv_image, (w/2 - 10, 0), (w/2 - 10, h), (255, 0, 0), 2)
 					cv2.line(cv_image, (w/2 + 10, 0), (w/2 + 10, h), (255, 0, 0), 2)
 					cv2.circle(cv_image, pto[0],2, (0,0,255), 3)
-
-			# for value in laser:
-			# 	print("nice")
-			# 	if value < 1.75:
-			# 		vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
-			# 		velocidade_saida.publish(vel)
+				else:
+						print("Não achou o ponto de fuga")
 
 			# else:
 			#     if len(media) != 0 and len(centro) != 0:
@@ -197,9 +213,36 @@ if __name__=="__main__":
 			#                 vel = Twist(Vector3(0.3,0,0), Vector3(0,0,0))
 
 			else: 
-				for item in lista_quero:
-					if id == item:
-						print("olá")
+				if id == lista_quero[1]:
+					print(lista_quero[1], id)
+					print("id encontrado")
+					if y > 0.2 or z > 0.2:
+						vel = Twist(Vector3(0,0,0), Vector3(0,0,-0.3))
+						print("Velocidade atual: {}".format(vel))
+						print("Girando pra esquerda")
+					elif y < -0.2 or z < -0.2:
+						vel = Twist(Vector3(0,0,0), Vector3(0,0,0.3))
+						print("Velocidade atual: {}".format(vel))
+						print("Girando pra direita")
+					else:
+						print('Indo pra frente')
+						vel = Twist(Vector3(0.2,0,0), Vector3(0,0,0))
+						print("Velocidade atual: {}".format(vel))
+				else:
+					print("Achou o id errado, centralizando no ponto de fuga de novo")
+					if len(pto) > 0: #Se tiver um ponto de fuga
+						print("x do ponto: {} y do ponto {}".format(pto[0], pto[1]))
+						if pto[0] > cv_image.shape[0]/2 + 15:
+							vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
+							print("Velocidade atual: {}".format(vel))
+						elif pto[0] < cv_image.shape[0]/2 - 15:
+							vel = Twist(Vector3(0,0,0), Vector3(0,0, -0.5))
+							print("Velocidade atual: {}".format(vel))
+						else:
+							vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
+							print("Velocidade atual: {}".format(vel))
+					else:
+						print("ué cadê o ponto de fuga")
 
 			#Alinhado com o while not shutdown 
 			velocidade_saida.publish(vel)

@@ -16,25 +16,25 @@ import smach
 import smach_ros
 
 
-def identifica_cor(frame):
+def identifica_cor(frame, cor):
     '''
     Segmenta o maior objeto cuja cor é parecida com cor_h (HUE da cor, no espaço HSV).
     '''
-
+    
     # No OpenCV, o canal H vai de 0 até 179, logo cores similares ao 
     # vermelho puro (H=0) estão entre H=-8 e H=8. 
     # Precisamos dividir o inRange em duas partes para fazer a detecção 
     # do vermelho:
     # frame = cv2.flip(frame, -1) # flip 0: eixo x, 1: eixo y, -1: 2 eixos
     frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    if cor == 'green':
+        cor_menor = np.array([0, 50, 50])
+        cor_maior = np.array([8, 255, 255])
+        segmentado_cor = cv2.inRange(frame_hsv, cor_menor, cor_maior)
 
-    cor_menor = np.array([0, 50, 50])
-    cor_maior = np.array([8, 255, 255])
-    segmentado_cor = cv2.inRange(frame_hsv, cor_menor, cor_maior)
-
-    cor_menor = np.array([172, 50, 50])
-    cor_maior = np.array([180, 255, 255])
-    segmentado_cor += cv2.inRange(frame_hsv, cor_menor, cor_maior)
+        cor_menor = np.array([172, 50, 50])
+        cor_maior = np.array([180, 255, 255])
+        segmentado_cor += cv2.inRange(frame_hsv, cor_menor, cor_maior)
 
     # Note que a notacão do numpy encara as imagens como matriz, portanto o enderecamento é
     # linha, coluna ou (y,x)
@@ -82,8 +82,8 @@ def identifica_cor(frame):
     cv2.putText(frame,"{:d} {:d}".format(*media),(20,100), 1, 4,(255,255,255),2,cv2.LINE_AA)
     cv2.putText(frame,"{:0.1f}".format(maior_contorno_area),(20,50), 1, 4,(255,255,255),2,cv2.LINE_AA)
 
-   # cv2.imshow('video', frame)
-    cv2.imshow('seg', segmentado_cor)
+    cv2.imshow('video', frame)
+    cv2.hconcat(frame, segmentado_cor)
     cv2.waitKey(1)
 
     return media, centro, maior_contorno_area
