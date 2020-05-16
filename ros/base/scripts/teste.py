@@ -23,7 +23,7 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import CompressedImage, Image, LaserScan
 from std_msgs.msg import Header
 from tf import TransformerROS, transformations
-
+import garra_demo
 __author__ = ["Rachel P. B. Moraes", "Igor Montagner", "Fabio Miranda"]
 
 
@@ -39,6 +39,7 @@ line2 = None
 global ptos
 global ptom
 global bordas_color
+global tutorial
 
 ptos = []
 ptom = None
@@ -63,7 +64,7 @@ cv_image = None
 media = []
 centro = []
 atraso = 1.5E9  # 1 segundo e meio. Em nanossegundos
-
+tutorial = garra_demo.MoveGroupPythonIntefaceTutorial()
 
 area = 0.0  # Variavel com a area do maior contorno
 
@@ -163,7 +164,8 @@ def roda_todo_frame(imagem):
 
 
 if __name__ == "__main__":
-    rospy.init_node("cor")
+    rospy.init_node('move_group_python_interface_tutorial', anonymous=True)
+    
 
     # topico_imagem = "/kamera"
     topico_imagem = "/camera/rgb/image_raw/theora"
@@ -291,18 +293,49 @@ if __name__ == "__main__":
                         vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
                         print("Velocidade atual: {}".format(vel))
                         for value in laser:
-                            if value < 0.2:
+                            if value < 0.3:
                                 lista_dist.append(value)
                                 print(lista_dist)
-                                while len(lista_dist) > 10:
-                                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+                                if len(lista_dist) > 40:
+                                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.15))
                                     velocidade_saida.publish(vel)
-                                    garra_demo.go_to_joint_state()
-                                    garra_demo.open_gripper()
-                                    garra_demo.go_to_home_position()
-                                    garra_demo.close_gripper()
-                                    if cv2.waitKey(1) & 0xFF == ord('k'):
-										break
+                                    print("Robô perto do creeper. Parando...")
+                                    raw_input()
+                        
+
+                                    print("\n============ Press `Enter` to go to init joint state ...\n")
+                                    raw_input()
+                                    tutorial.go_to_init_joint_state()
+
+
+                                    print("\n============ Press `Enter` to go to home joint state ...\n")
+                                    raw_input()
+                                    tutorial.go_to_home_joint_state()
+
+                                    print("\n============ Press `Enter` to open gripper  ...\n")
+                                    raw_input()
+                                    tutorial.open_gripper()
+
+                                    print("\n============ Press `Enter` to close gripper  ...\n")
+                                    raw_input()
+                                    tutorial.close_gripper()
+
+                                    print("\n============ Press `Enter` to go to init goal ...\n")
+                                    raw_input()
+                                    tutorial.go_to_zero_position_goal()
+
+
+                                    print("\n============ Press `Enter` to go to home goal ...\n")
+                                    raw_input()
+                                    tutorial.go_to_home_position_goal()
+
+                                    print("\n============ Press `Enter` to open gripper  ...\n")
+                                    raw_input()
+                                    tutorial.open_gripper()
+
+                                    print("\n============ Press `Enter` to close gripper  ...\n")
+                                    raw_input()
+                                    tutorial.close_gripper()
 
 #__________________________________________________________________ACHOU UM ID MAS NÃO É O DA LISTA________________________________________________________________________#
 

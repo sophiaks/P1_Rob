@@ -260,7 +260,7 @@ if __name__ == "__main__":
                             
                         ptom = tuple(ptom)
 
-                        cv2.imshow("cv_image no loop principal", cv_image)
+                        # cv2.imshow("cv_image no loop principal", cv_image)
                         cv2.waitKey(1)
 
                         if pto[0] > cv_image.shape[0]/2 + 10:
@@ -283,12 +283,12 @@ if __name__ == "__main__":
                     
 
 
-            #if cv_image is not None:
+        #if cv_image is not None:
 
                 
                 # Note que o imshow precisa ficar *ou* no codigo de tratamento de eventos *ou* no thread principal, não em ambos
-                #cv2.imshow("cv_image no loop principal", cv_image)
-                #cv2.waitKey(1)
+                cv2.imshow("cv_image no loop principal", cv_image)
+                cv2.waitKey(1)
 
                 # if len(pto) > 0:
                 #     if pto[0] > cv_image.shape[0]/2 + 10:
