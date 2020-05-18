@@ -40,13 +40,14 @@ global ptos
 global ptom
 global bordas_color
 global tutorial
+global pegou
 
 ptos = []
 ptom = None
 bordas_color = None
 
 lista_dist = []
-
+pegou = False
 x = 0
 y = 0
 z = 0
@@ -277,15 +278,15 @@ if __name__ == "__main__":
                 print(lista_quero[1], id)
 
             else:
-                if id == lista_quero[1]:
+                if id == lista_quero[1] or id==110:
                     print(lista_quero[1], id)
                     print("id encontrado")
-                    if y < -0.15:
-                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.15))
+                    if y < -0.1:
+                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
                         print("Velocidade atual: {}".format(vel))
                         print("Girando pra direita")
-                    elif y > 0.15:
-                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.15))
+                    elif y > 0.1:
+                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
                         print("Velocidade atual: {}".format(vel))
                         print("Girando pra esquerda")
                     else:
@@ -293,49 +294,53 @@ if __name__ == "__main__":
                         vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
                         print("Velocidade atual: {}".format(vel))
                         for value in laser:
-                            if value < 0.3:
+                            if value < 0.15:
                                 lista_dist.append(value)
                                 print(lista_dist)
-                                if len(lista_dist) > 40:
-                                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.15))
-                                    velocidade_saida.publish(vel)
-                                    print("Robô perto do creeper. Parando...")
-                                    raw_input()
-                        
+                        if len(lista_dist) > 40 and pegou == False:
+                            vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+                            velocidade_saida.publish(vel)
+                            rospy.sleep(0.2)
+                            print("Robô perto do creeper. Parando...")
+                            
+                            print("\n----------------------------------------------------------")
 
-                                    print("\n============ Press `Enter` to go to init joint state ...\n")
-                                    raw_input()
-                                    tutorial.go_to_init_joint_state()
-
-
-                                    print("\n============ Press `Enter` to go to home joint state ...\n")
-                                    raw_input()
-                                    tutorial.go_to_home_joint_state()
-
-                                    print("\n============ Press `Enter` to open gripper  ...\n")
-                                    raw_input()
-                                    tutorial.open_gripper()
-
-                                    print("\n============ Press `Enter` to close gripper  ...\n")
-                                    raw_input()
-                                    tutorial.close_gripper()
-
-                                    print("\n============ Press `Enter` to go to init goal ...\n")
-                                    raw_input()
-                                    tutorial.go_to_zero_position_goal()
+                            print("\n============ Press `Enter` to go to init joint state ...\n")
+                            raw_input()
+                            tutorial.go_to_init_joint_state()
 
 
-                                    print("\n============ Press `Enter` to go to home goal ...\n")
-                                    raw_input()
-                                    tutorial.go_to_home_position_goal()
+                            print("\n============ Press `Enter` to go to home joint state ...\n")
+                            raw_input()
+                            tutorial.go_to_home_joint_state()
 
-                                    print("\n============ Press `Enter` to open gripper  ...\n")
-                                    raw_input()
-                                    tutorial.open_gripper()
+                            print("\n============ Press `Enter` to open gripper  ...\n")
+                            raw_input()
+                            tutorial.open_gripper()
 
-                                    print("\n============ Press `Enter` to close gripper  ...\n")
-                                    raw_input()
-                                    tutorial.close_gripper()
+                            print("\n============ Press `Enter` to close gripper  ...\n")
+                            raw_input()
+                            tutorial.close_gripper()
+
+                            print("\n============ Press `Enter` to go to init goal ...\n")
+                            raw_input()
+                            tutorial.go_to_zero_position_goal()
+
+
+                            print("\n============ Press `Enter` to go to home goal ...\n")
+                            raw_input()
+                            tutorial.go_to_home_position_goal()
+
+                            print("\n============ Press `Enter` to open gripper  ...\n")
+                            raw_input()
+                            tutorial.open_gripper()
+
+                            print("\n============ Press `Enter` to close gripper  ...\n")
+                            raw_input()
+                            tutorial.close_gripper()
+
+                            pegou = True
+
 
 #__________________________________________________________________ACHOU UM ID MAS NÃO É O DA LISTA________________________________________________________________________#
 
