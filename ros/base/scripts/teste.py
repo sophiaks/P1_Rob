@@ -40,15 +40,6 @@ line2 = None
 
 global bordas_color
 global tutorial
-<<<<<<< HEAD
-<<<<<<< HEAD
-global pegou
-global maior_contorno_area
-global ptom
-=======
->>>>>>> parent of 4efef16... garra quase lá
-=======
->>>>>>> parent of 4efef16... garra quase lá
 
 ptom = (0, 0)
 bordas_color = None
