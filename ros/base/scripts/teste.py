@@ -367,3 +367,5 @@ if __name__ == "__main__":
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
+
+        #oi sophoa
