@@ -31,7 +31,7 @@ def processa(frame):
 
     cross(result_frame, centro, [255,0,0], 1, 17)
 
-    # cv2.imshow('video', result_frame)
+    cv2.imshow('video', result_frame)
     cv2.waitKey(1)
 
     return centro, result_frame, result_tuples
@@ -55,6 +55,7 @@ def identifica_cor(frame):
 
     cor_menor = np.array([172, 50, 50])
     cor_maior = np.array([180, 255, 255])
+
     segmentado_cor += cv2.inRange(frame_hsv, cor_menor, cor_maior)
 
     # Note que a notacão do numpy encara as imagens como matriz, portanto o enderecamento é
@@ -107,4 +108,4 @@ def identifica_cor(frame):
     # cv2.imshow('seg', segmentado_cor)
     cv2.waitKey(1)
 
-    return centro, result_frame, result_tuples
+    return centro
