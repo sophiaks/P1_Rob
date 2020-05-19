@@ -63,13 +63,15 @@ def recebe(msg):
 	global y
 	global z
 	global id
-
-	for marker in msg.markers:
-		id = marker.id
-		marcador = "ar_marker_" + str(id)
-
-		print(tf_buffer.can_transform(frame, marcador, rospy.Time(0)))
-		header = Header(frame_id=marcador)
+    
+    
+    
+    
+    for marker in msg.markers:
+        id = marker.id
+        marcador = "ar_marker_" + str(id)
+        print(tf_buffer.can_transform(frame, marcador, rospy.Time(0)))
+        header = Header(frame_id=marcador)
 		# Procura a transformacao em sistema de coordenadas entre a base do robo e o marcador numero 100
 		# Note que para seu projeto 1 voce nao vai precisar de nada que tem abaixo, a 
         # Nao ser que queira levar angulos em conta
@@ -192,7 +194,8 @@ if __name__ == "__main__":
                 bordas = cv2.Canny(blur,50,150,apertureSize = 3)
                 bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR)  
 
-
+                cv2.imshow("opa", bordas_color)
+                cv2.waitKey()
                 
                 mask = cv2.inRange(bordas_color, pto_fuga.cor_menor, pto_fuga.cor_maior) 
                 
@@ -260,8 +263,8 @@ if __name__ == "__main__":
                             
                         ptom = tuple(ptom)
 
-                        cv2.imshow("cv_image no loop principal", cv_image)
-                        cv2.waitKey(1)
+                        # cv2.imshow("cv_image no loop principal", cv_image)
+                        # cv2.waitKey(1)
 
                         if pto[0] > cv_image.shape[0]/2 + 10:
                             vel = Twist(Vector3(0,0,0), Vector3(0,0, 0.5))
@@ -271,7 +274,7 @@ if __name__ == "__main__":
                         
                         else:
                             vel = Twist(Vector3(0.5,0,0), Vector3(0,0, 0))
-
+#
                         w, h = cv_image.shape()                    
                             
                         cv2.circle(cv_image, (int(ptom[0]), int(ptom[1])), 3, (255,0,0), 2)    
@@ -283,12 +286,7 @@ if __name__ == "__main__":
                     
 
 
-            #if cv_image is not None:
 
-                
-                # Note que o imshow precisa ficar *ou* no codigo de tratamento de eventos *ou* no thread principal, não em ambos
-                #cv2.imshow("cv_image no loop principal", cv_image)
-                #cv2.waitKey(1)
 
                 # if len(pto) > 0:
                 #     if pto[0] > cv_image.shape[0]/2 + 10:
