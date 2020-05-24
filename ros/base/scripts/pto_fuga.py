@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 import time
 from cv_bridge import CvBridge, CvBridgeError
 
+
 lower = 0
 upper = 1
 
@@ -24,22 +25,22 @@ def line_intersecion(line1, line2):
     p1 = line1[0]
     p2 = line1[1]
 
-    dy1 = p2[1] - p1[1]; 
-    dx1 = p1[0] - p2[0]; 
-    reta1 = dy1*(p1[0]) + dx1*(p1[1]);
+    dy1 = p2[1] - p1[1] 
+    dx1 = p1[0] - p2[0]
+    reta1 = dy1*(p1[0]) + dx1*(p1[1])
 
     p3 = line2[0]
     p4 = line2[1]
 
     dy2 = p4[1] - p3[1]; 
     dx2 = p3[0] - p4[0]; 
-    reta2 = dy2*(p3[0]) + dx2*(p3[1]);
+    reta2 = dy2*(p3[0]) + dx2*(p3[1])
     
     if dy1*dx2 - dy2*dx1 != 0:
         determinant = dy1*dx2 - dy2*dx1
 
-    x = (dx2*reta1 - dx1*reta2)//determinant; 
-    y = (dy1*reta2 - dy2*reta1)//determinant; 
+    x = (dx2*reta1 - dx1*reta2)//determinant 
+    y = (dy1*reta2 - dy2*reta1)//determinant 
 
     return (x, y)
 
