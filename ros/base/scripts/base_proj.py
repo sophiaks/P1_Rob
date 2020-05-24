@@ -20,7 +20,6 @@ from geometry_msgs.msg import Twist, Vector3, Pose, Vector3Stamped
 from ar_track_alvar_msgs.msg import AlvarMarker, AlvarMarkers
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image
-from std_msgs.msg import Header
 
 import visao_module
 import pto_fuga
@@ -29,7 +28,7 @@ import encontra_pista
 
 bridge = CvBridge()
 
-cv_image = None
+
 media = []
 centro = []
 atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
@@ -58,11 +57,13 @@ tf_buffer = tf2_ros.Buffer()
 #________________________________________________RECEBE_________________________________________#
 
 
-# def recebe(msg):
-# 	global x # O global impede a recriacao de uma variavel local, para podermos usar o x global ja'  declarado
+# def recebe(msg):    
+    
+#     global x # O global impede a recriacao de uma variavel local, para podermos usar o x global ja'  declarado
 # 	global y
 # 	global z
 # 	global id
+    
 
 # 	for marker in msg.markers:
 # 		id = marker.id
@@ -164,13 +165,14 @@ def roda_todo_frame(imagem):
     global linhas1
     global linhas2
     global cor
-    
+    global topico_imagem
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
     lag = now-imgtime # calcula o lag
     delay = lag.nsecs
     # print("delay ", "{:.3f}".format(delay/1.0E9))
+
     if delay > atraso and check_delay==True:
         print("Descartando por causa do delay do frame:", delay)
         return 
@@ -187,7 +189,7 @@ def roda_todo_frame(imagem):
 
         depois = time.clock()
         # Desnecessário - Hough e MobileNet já abrem janelas
-        #cv_image = saida_net.copy()
+        cv_image = saida_net.copy()
     except CvBridgeError as e:
         print('ex', e)
 
@@ -352,5 +354,7 @@ if __name__ == "__main__":
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
+
+
 
 
