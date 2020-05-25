@@ -379,7 +379,7 @@ if __name__ == "__main__":
                             if value < 0.15:
                                 lista_dist.append(value)
                                 print(lista_dist)
-                        if len(lista_dist) > 40 and pegou == False:
+                        if len(lista_dist) > 50 and pegou == False:
                             vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
                             velocidade_saida.publish(vel)
                             rospy.sleep(0.2)
@@ -479,7 +479,7 @@ if __name__ == "__main__":
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
 
-        #oi sophoa
+        #oi Manditz
 
 
 
