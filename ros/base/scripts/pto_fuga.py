@@ -20,6 +20,9 @@ upper = 1
 cor_menor = np.array([240, 240, 240], dtype=np.uint8)
 cor_maior = np.array([255, 255, 255], dtype=np.uint8)
 
+cor_menor2 = np.array([20, 100, 100], dtype=np.uint8)
+cor_maior2 = np.array([30, 255, 255], dtype=np.uint8)
+
 #TypeError: Expected Ptr<cv::UMat> for argument '%s'
 
 

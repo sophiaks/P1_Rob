@@ -52,7 +52,6 @@ ptos = []
 ptom = None
 bordas_color = None
 
-lista_dist = []
 pegou = False
 x = 0
 y = 0
@@ -135,7 +134,6 @@ def recebe(msg):
 
 #A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
-    print("alguma coisa")
     global cv_image
     global resultados
     global media
@@ -184,7 +182,7 @@ if __name__ == "__main__":
     
 
     # topico_imagem = "/kamera"
-    topico_imagem = "/camera/rgb/image_raw/compressed"
+    topico_imagem = "/camera/rgb/image_raw/theora"
 
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
@@ -201,33 +199,24 @@ if __name__ == "__main__":
 
     try:
         tfl = tf2_ros.TransformListener(tf_buffer)
-        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.1))
-
 
         while not rospy.is_shutdown():     
-
+            vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.1))
+            print("Girando inicialmente")
             if cv_image is not None:
-               
-
+            
                 lines = []            
                 lines = None            
                 line1 = None
                 line2 = None
 
                 ptos = []
-                
-                gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-                
-                blur = cv2.GaussianBlur(gray, (5, 5), 0)
-
+                mask  = cv2.inRange(cv_image, pto_fuga.cor_menor, pto_fuga.cor_maior)
+                mask += cv2.inRange(cv_image, pto_fuga.cor_menor2, pto_fuga.cor_maior2)
+                blur = cv2.GaussianBlur(mask, (5, 5), 0)
                 bordas = cv2.Canny(blur, 50, 150, apertureSize=3)
                 bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR)
-
-                mask  = cv2.inRange(bordas_color, pto_fuga.cor_menor, pto_fuga.cor_maior)
-
-                lines = cv2.HoughLines(bordas,1,np.pi/180,200)  
-
-                print("kd cv_image")
+                lines = cv2.HoughLines(bordas,1,np.pi/180,100)  
 
                 #if id != lista_quero[1] or id == None:
                 if id == None:
@@ -308,12 +297,12 @@ if __name__ == "__main__":
 
                             print("x do ponto: {} y do ponto {}".format(ptom[0], ptom[1]))
 
-                            if ptom[0] > cv_image.shape[0]/2 + 100:
+                            if centro[0] > cv_image.shape[0]/2 + 100:
                                 vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
                                                             
                                 print("Ponto tá pra direita. Velocidade atual: {}".format(vel))
                                 
-                            elif ptom[0] < cv_image.shape[0]/2 - 100:
+                            elif centro[0] < cv_image.shape[0]/2 - 100:
                                 vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
                                 
                                 print("Ponto tá pra esquerda. Velocidade atual: {}".format(vel))
@@ -321,13 +310,6 @@ if __name__ == "__main__":
                             else:
                                 vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
                                 print("Seguindo em frente. Velocidade atual: {}".format(vel))
-
-                                # for value in laser:
-                                #     if value < 0.75:
-                                #         print("Agora vai garra")
-                                #         vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
-                                #         velocidade_saida.publish(vel)
-
                                         
                         else:
                             print("Não achou o ponto de fuga")
@@ -343,7 +325,7 @@ if __name__ == "__main__":
             # 1. Manter o robô na pista usando O código do pto de fuga
 
 
-                elif id == lista_quero[1] or id==110:
+                elif id == lista_quero[1]:
                         #print(lista_quero[1], id)
                         #print("id encontrado")
                     if y < -0.1:
@@ -456,8 +438,9 @@ if __name__ == "__main__":
             #     cv2.imshow("/camera/rgb/image_raw/theora", cv_image)
             #     cv2.waitKey(1)
 
-            if bordas is not None:
-                cv2.imshow("/camera/rgb/image_raw/theora", bordas)
+            if bordas_color is not None:
+                numpy_vertical_concat = np.concatenate((bordas_color, cv_image), axis=1)
+                cv2.imshow("Video", numpy_vertical_concat)
                 cv2.waitKey(1)
                 
 
