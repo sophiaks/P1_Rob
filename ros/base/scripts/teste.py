@@ -34,12 +34,17 @@ lines = None
 line1 = None
 line2 = None
 
+global bordas_color
+bordas = None
+
 
 global ptos
 global ptom
 global bordas_color
 global tutorial
 global pegou
+global mask
+mask = None
 
 cv_image = None
 
@@ -155,11 +160,11 @@ def roda_todo_frame(imagem):
         antes = time.clock()
         
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
-        cv_image = cv2.flip(cv_image, -1)
+        #cv_image = cv2.flip(cv_image, -1)
 
         media, centro, maior_area = cormodule.identifica_cor(cv_image, lista_quero[0])
         centro, saida_net, resultados = visao_module.processa(temp_image)
-        pto = pto_fuga.line_intersecction(cv_image)
+        #pto = pto_fuga.line_intersecction(cv_image)
         for r in resultados:
             print(r)
             pass
@@ -168,6 +173,7 @@ def roda_todo_frame(imagem):
 
     except CvBridgeError as e:
         print('ex', e)
+
 
 
 
@@ -195,24 +201,23 @@ if __name__ == "__main__":
 
     try:
         tfl = tf2_ros.TransformListener(tf_buffer)
-        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.1))
 
-        while not rospy.is_shutdown():               
 
-            lines = []
-            
-            lines = None            
-            line1 = None
-            line2 = None
-
-            ptos = []
+        while not rospy.is_shutdown():     
 
             if cv_image is not None:
+               
 
-                print("kd cv_image")
+                lines = []            
+                lines = None            
+                line1 = None
+                line2 = None
 
+                ptos = []
+                
                 gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-
+                
                 blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
                 bordas = cv2.Canny(blur, 50, 150, apertureSize=3)
@@ -220,8 +225,9 @@ if __name__ == "__main__":
 
                 mask  = cv2.inRange(bordas_color, pto_fuga.cor_menor, pto_fuga.cor_maior)
 
-                lines = cv2.HoughLines(mask,1,np.pi/180,200)
+                lines = cv2.HoughLines(bordas,1,np.pi/180,200)  
 
+                print("kd cv_image")
 
                 #if id != lista_quero[1] or id == None:
                 if id == None:
@@ -246,19 +252,25 @@ if __name__ == "__main__":
                             x2 = int(x0 - 3000*(-b))
                             y2 = int(y0 - 3000*(a))
 
+
+
                             if x2 != x1:
                                 m = (y1-y0)/(x1-x0)
+                                print("o q q ta ocorrendo")
+
 
                             h = y0 - (m * x0)
                             p1 = (x1, y1)
                             p2 = (x2, y2)
 
-                            if m < -0.3 and m > -19:
+                            print(p1, p2)
+
+                            if m < -0.1 and m > -15:
                                 cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
                                 line1 = (p1, p2)
                                 print("Linha esquerda ok")
 
-                            elif m > 0.1 and m < 2.5:
+                            elif m > 0.1 and m < 15:
                                 cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
                                 line2 = (p1, p2) 
                                 print("Linha direita ok")
@@ -267,6 +279,15 @@ if __name__ == "__main__":
 
                                 pi = pto_fuga.line_intersecion(line1, line2)
                                 ptos.append(pi)
+
+                            # elif line1 is None and line2 is not None:
+                            #     vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
+                            #     print("esquerda (linha)")
+                            # else:
+                            #     vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
+                            #     print("direita (linha)")
+                                
+
 #_______________________________________________________________________________SE ACHAR PONTO DE FUGA_________________________________________________________________#
 #Média dos pontos:   
                     if ptos is not None: # acho q n precisa, mas...
@@ -287,23 +308,25 @@ if __name__ == "__main__":
 
                             print("x do ponto: {} y do ponto {}".format(ptom[0], ptom[1]))
 
-                            if ptom[0] > cv_image.shape[0]/2 + 20:
-                                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
+                            if ptom[0] > cv_image.shape[0]/2 + 100:
+                                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
+                                                            
                                 print("Ponto tá pra direita. Velocidade atual: {}".format(vel))
                                 
-                            elif ptom[0] < cv_image.shape[0]/2 - 20:
-                                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.2))
+                            elif ptom[0] < cv_image.shape[0]/2 - 100:
+                                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
+                                
                                 print("Ponto tá pra esquerda. Velocidade atual: {}".format(vel))
 
                             else:
                                 vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
                                 print("Seguindo em frente. Velocidade atual: {}".format(vel))
 
-                                for value in laser:
-                                    if value < 0.75:
-                                        print("Agora vai garra")
-                                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
-                                        velocidade_saida.publish(vel)
+                                # for value in laser:
+                                #     if value < 0.75:
+                                #         print("Agora vai garra")
+                                #         vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+                                #         velocidade_saida.publish(vel)
 
                                         
                         else:
@@ -320,119 +343,126 @@ if __name__ == "__main__":
             # 1. Manter o robô na pista usando O código do pto de fuga
 
 
-                        if id == lista_quero[1] or id==110:
-                                #print(lista_quero[1], id)
-                                #print("id encontrado")
-                            if y < -0.1:
-                                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
-                                #print("Velocidade atual: {}".format(vel))
-                                #print("Girando pra direita")
-                            elif y > 0.1:
-                                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
-                                #print("Velocidade atual: {}".format(vel))
-                                #print("Girando pra esquerda")
-                            else:
-                                #print('Indo pra frente')
-                                vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
-                                #print("Velocidade atual: {}".format(vel))
-                                for value in laser:
-                                    if value < 0.15:
-                                        lista_dist.append(value)
-                                        print(lista_dist)
-                                if len(lista_dist) > 40 and pegou == False:
-                                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
-                                    velocidade_saida.publish(vel)
-                                    rospy.sleep(0.2)
-                                    print("Robô perto do creeper. Parando...")
-                                    
-                                    print("\n----------------------------------------------------------")
+                elif id == lista_quero[1] or id==110:
+                        #print(lista_quero[1], id)
+                        #print("id encontrado")
+                    if y < -0.1:
+                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
+                        #print("Velocidade atual: {}".format(vel))
+                        #print("Girando pra direita")
+                    elif y > 0.1:
+                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
+                        #print("Velocidade atual: {}".format(vel))
+                        #print("Girando pra esquerda")
+                    else:
+                        #print('Indo pra frente')
+                        vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
+                        #print("Velocidade atual: {}".format(vel))
+                        for value in laser:
+                            if value < 0.15:
+                                lista_dist.append(value)
+                                print(lista_dist)
+                        if len(lista_dist) > 40 and pegou == False:
+                            vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+                            velocidade_saida.publish(vel)
+                            rospy.sleep(0.2)
+                            print("Robô perto do creeper. Parando...")
+                            
+                            print("\n----------------------------------------------------------")
 
-                                    print("\n============ Press `Enter` to go to init joint state ...\n")
-                                    raw_input()
-                                    tutorial.go_to_init_joint_state()
-
-
-                                    print("\n============ Press `Enter` to go to home joint state ...\n")
-                                    raw_input()
-                                    tutorial.go_to_home_joint_state()
-
-                                    print("\n============ Press `Enter` to open gripper  ...\n")
-                                    raw_input()
-                                    tutorial.open_gripper()
-
-                                    print("\n============ Press `Enter` to close gripper  ...\n")
-                                    raw_input()
-                                    tutorial.close_gripper()
-
-                                    print("\n============ Press `Enter` to go to init goal ...\n")
-                                    raw_input()
-                                    tutorial.go_to_zero_position_goal()
+                            print("\n============ Press `Enter` to go to init joint state ...\n")
+                            raw_input()
+                            tutorial.go_to_init_joint_state()
 
 
-                                    print("\n============ Press `Enter` to go to home goal ...\n")
-                                    raw_input()
-                                    tutorial.go_to_home_position_goal()
+                            print("\n============ Press `Enter` to go to home joint state ...\n")
+                            raw_input()
+                            tutorial.go_to_home_joint_state()
 
-                                    print("\n============ Press `Enter` to open gripper  ...\n")
-                                    raw_input()
-                                    tutorial.open_gripper()
+                            print("\n============ Press `Enter` to open gripper  ...\n")
+                            raw_input()
+                            tutorial.open_gripper()
 
-                                    print("\n============ Press `Enter` to close gripper  ...\n")
-                                    raw_input()
-                                    tutorial.close_gripper()
+                            print("\n============ Press `Enter` to close gripper  ...\n")
+                            raw_input()
+                            tutorial.close_gripper()
 
-                                    pegou = True
+                            print("\n============ Press `Enter` to go to init goal ...\n")
+                            raw_input()
+                            tutorial.go_to_zero_position_goal()
+
+
+                            print("\n============ Press `Enter` to go to home goal ...\n")
+                            raw_input()
+                            tutorial.go_to_home_position_goal()
+
+                            print("\n============ Press `Enter` to open gripper  ...\n")
+                            raw_input()
+                            tutorial.open_gripper()
+
+                            print("\n============ Press `Enter` to close gripper  ...\n")
+                            raw_input()
+                            tutorial.close_gripper()
+
+                            pegou = True
 
 
 #__________________________________________________________________ACHOU UM ID MAS NÃO É O DA LISTA________________________________________________________________________#
 
-                        
-                        elif pegou == True:
-                            print("Achou o id errado, centralizando no ponto de fuga de novo")
-                            if len(ptom) > 0:  # Se tiver um ponto de fuga
-                                for res in resultados:
-                                    if res != lista_quero[2]:
-                                        print("x do ponto: {} y do ponto {}".format(ptom[0], ptom[1]))
-                                        if ptom[0] > cv_image.shape[0]/2 + 15:
-                                            vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
-                                            print("Velocidade atual: {}".format(vel))
-                                        elif ptom[0] < cv_image.shape[0]/2 - 15:
-                                            vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.2))
-                                            print("Velocidade atual: {}".format(vel))
-                                        else:
-                                            vel = Twist(Vector3(0.3, 0, 0), Vector3(0, 0, 0))
-                                            print("Velocidade atual: {}".format(vel))
-                        
-                                    else:
-                                        print("Achou o id errado, centralizando no ponto de fuga de novo")
-                                        if len(ptom) > 0:  # Se tiver um ponto de fuga
-                                            print("x do ponto: {} y do ponto {}".format(
-                                                ptom[0], ptom[1]))
-                                            if ptom[0] > cv_image.shape[0]/2 + 15:
-                                                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
-                                                print("Velocidade atual: {}".format(vel))
-                                            elif ptom[0] < cv_image.shape[0]/2 - 15:
-                                                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.2))
-                                                print("Velocidade atual: {}".format(vel))
-                                            else:
-                                                vel = Twist(Vector3(0.3, 0, 0), Vector3(0, 0, 0))
-                                                print("Velocidade atual: {}".format(vel))
+                    
+                elif pegou == True:
+                    print("Achou o id errado, centralizando no ponto de fuga de novo")
+                    if len(ptom) > 0:  # Se tiver um ponto de fuga
+                        for res in resultados:
+                            if res != lista_quero[2]:
+                                print("x do ponto: {} y do ponto {}".format(ptom[0], ptom[1]))
+                                if ptom[0] > cv_image.shape[0]/2 + 15:
+                                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
+                                    print("Velocidade atual: {}".format(vel))
+                                elif ptom[0] < cv_image.shape[0]/2 - 15:
+                                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.2))
+                                    print("Velocidade atual: {}".format(vel))
+                                else:
+                                    vel = Twist(Vector3(0.3, 0, 0), Vector3(0, 0, 0))
+                                    print("Velocidade atual: {}".format(vel))
+                
                             else:
-                                print("ué cadê o ponto de fuga")
+                                print("Achou o id errado, centralizando no ponto de fuga de novo")
+                                if len(ptom) > 0:  # Se tiver um ponto de fuga
+                                    print("x do ponto: {} y do ponto {}".format(
+                                        ptom[0], ptom[1]))
+                                    if ptom[0] > cv_image.shape[0]/2 + 15:
+                                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
+                                        print("Velocidade atual: {}".format(vel))
+                                    elif ptom[0] < cv_image.shape[0]/2 - 15:
+                                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.2))
+                                        print("Velocidade atual: {}".format(vel))
+                                    else:
+                                        vel = Twist(Vector3(0.3, 0, 0), Vector3(0, 0, 0))
+                                        print("Velocidade atual: {}".format(vel))
+                    else:
+                        print("ué cadê o ponto de fuga")                   
 
-                        
 
-
-            # cv2.imshow("/camera/rgb/image_raw/theora", cv_image)
-            # cv2.waitKey(1)
+            
+            
 
 
             # Alinhado com o while not shutdown
             velocidade_saida.publish(vel)
             rospy.sleep(0.2)
 
+            # if cv_image is not None:                
+            #     cv2.imshow("/camera/rgb/image_raw/theora", cv_image)
+            #     cv2.waitKey(1)
+
+            if bordas is not None:
+                cv2.imshow("/camera/rgb/image_raw/theora", bordas)
+                cv2.waitKey(1)
+                
+
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+                 break
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
