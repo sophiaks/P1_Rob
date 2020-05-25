@@ -14,7 +14,7 @@ from cv_bridge import CvBridge, CvBridgeError
 lower = 0
 upper = 1
 
-cor_menor = np.array([230, 230, 230], dtype=np.uint8)
+cor_menor = np.array([220, 220, 220], dtype=np.uint8)
 cor_maior = np.array([255, 255, 255], dtype=np.uint8)
 
 #TypeError: Expected Ptr<cv::UMat> for argument '%s'
