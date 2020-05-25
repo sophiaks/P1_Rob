@@ -45,8 +45,13 @@ global bordas_color
 global tutorial
 global pegou
 global mask
-mask = None
+global centro
+global media
+global cm_amarelo
 
+cm_amarelo = None
+
+mask = None
 cv_image = None
 
 lista_dist = []
@@ -69,8 +74,8 @@ def funcscan(msg):
 bridge = CvBridge()
 temp_image = None
 
-#media = []
-#centro = []
+media = []
+centro = []
 atraso = 1.5E9  # 1 segundo e meio. Em nanossegundos
 tutorial = garra_demo.MoveGroupPythonIntefaceTutorial()
 
@@ -82,8 +87,8 @@ area = 0.0  # Variavel com a area do maior contorno
 check_delay = False
 # _________________________TF_________________________#
 
-#frame = "head_camera"
-frame = "camera_link"
+frame = "head_camera"
+#frame = "camera_link"
 tfl = 0
 tf_buffer = tf2_ros.Buffer()
 
@@ -139,7 +144,7 @@ def roda_todo_frame(imagem):
     global cv_image
     global resultados
     global media
-    global centro
+    #global centro
     global temp_image
     global frame
     global pto
@@ -202,13 +207,35 @@ if __name__ == "__main__":
     try:
         tfl = tf2_ros.TransformListener(tf_buffer)
 
-        while not rospy.is_shutdown():     
-            vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.1))
+        while not rospy.is_shutdown():
 
+            vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.08))        
+         
             print("Girando inicialmente")
 
-
             if cv_image is not None:
+
+                cm_amarelo = cormodule.identifica_cor(cv_image, 'amarelo')[1]
+                if cm_amarelo is not None:
+
+                    cv2.circle(cv_image, (int(cm_amarelo[0]), int(cm_amarelo[0])), 3, (255,0,230), 2)
+
+                    if cm_amarelo[0] > cv_image.shape[0]/2 + 80:
+                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
+                                                    
+                        print("Ponto tá pra direita. Velocidade atual: {}".format(vel))
+                        
+                    elif cm_amarelo[0] < cv_image.shape[0]/2 - 80:
+                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
+                        
+                        print("Ponto tá pra esquerda. Velocidade atual: {}".format(vel))
+
+                    else:                        
+                        vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
+                        print("Seguindo em frente. Velocidade atual: {}".format(vel))
+
+                vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.1))
+                    
 
                 print("cv_image ta aqui")
             
@@ -220,7 +247,7 @@ if __name__ == "__main__":
                 ptos = []
 
                 mask  = cv2.inRange(cv_image, pto_fuga.cor_menor, pto_fuga.cor_maior)
-                #mask += cv2.inRange(cv_image, pto_fuga.cor_menor2, pto_fuga.cor_maior2)
+                mask += cv2.inRange(cv_image, pto_fuga.cor_menor2, pto_fuga.cor_maior2)
                 
                 blur = cv2.GaussianBlur(mask, (5, 5), 0)
                 bordas = cv2.Canny(blur, 50, 150, apertureSize=3)
@@ -264,12 +291,12 @@ if __name__ == "__main__":
 
                             print(p1, p2)
 
-                            if m < -0.1 and m > -2:
+                            if m < -0.2 and m > -10:
                                 cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
                                 line1 = (p1, p2)
                                 print("Linha esquerda ok")
 
-                            elif m > 0.1 and m < 3:
+                            elif m > 0.1 and m < 11:
                                 cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
                                 line2 = (p1, p2) 
                                 print("Linha direita ok")
@@ -305,15 +332,14 @@ if __name__ == "__main__":
 
                             cv2.circle(cv_image, (int(ptom[0]), int(ptom[1])), 3, (255,0,0), 2) 
 
-
                             print("x do ponto: {} y do ponto {}".format(ptom[0], ptom[1]))
 
-                            if centro[0] > cv_image.shape[0]/2 + 100:
+                            if ptom[0] > cv_image.shape[0]/2 + 100:
                                 vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
                                                             
                                 print("Ponto tá pra direita. Velocidade atual: {}".format(vel))
                                 
-                            elif centro[0] < cv_image.shape[0]/2 - 100:
+                            elif ptom[0] < cv_image.shape[0]/2 - 100:
                                 vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
                                 
                                 print("Ponto tá pra esquerda. Velocidade atual: {}".format(vel))
@@ -434,12 +460,6 @@ if __name__ == "__main__":
                     else:
                         print("ué cadê o ponto de fuga")                   
 
-
-            
-            
-
-
-            # Alinhado com o while not shutdown
             velocidade_saida.publish(vel)
             rospy.sleep(0.2)
 
