@@ -23,7 +23,7 @@ from sensor_msgs.msg import Image
 
 import visao_module
 import pto_fuga
-import encontra_pista
+#import encontra_pista
 
 
 bridge = CvBridge()

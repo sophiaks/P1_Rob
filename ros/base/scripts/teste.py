@@ -23,6 +23,7 @@ from sensor_msgs.msg import CompressedImage, Image, LaserScan
 from std_msgs.msg import Header
 from tf import TransformerROS, transformations
 import garra_demo
+
 __author__ = ["Rachel P. B. Moraes", "Igor Montagner", "Fabio Miranda"]
 
 
@@ -182,14 +183,14 @@ if __name__ == "__main__":
     
 
     # topico_imagem = "/kamera"
-    topico_imagem = "/camera/rgb/image_raw/theora"
+    topico_imagem = "/camera/rgb/image_raw/compressed"
 
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
     # Para recebermos notificacoes de que marcadores foram vistos
     
-    recebedor2 = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size=2**24)
-    recebedor2 = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe)
+    recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size=2**24)
+    recebedor = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe)
     
     print("Usando ", topico_imagem)
 
@@ -202,8 +203,13 @@ if __name__ == "__main__":
 
         while not rospy.is_shutdown():     
             vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.1))
+
             print("Girando inicialmente")
+
+
             if cv_image is not None:
+
+                print("cv_image ta aqui")
             
                 lines = []            
                 lines = None            
@@ -221,6 +227,7 @@ if __name__ == "__main__":
                 #if id != lista_quero[1] or id == None:
                 if id == None:
                     print("nenhum id encontrado")
+
                 # Segue o código do ponto de fuga
                 print(lista_quero[1], id)#__________________________________________________________________CASO TENHA ALGUMA LINHA_______________________________________________________________________#
 
@@ -317,15 +324,12 @@ if __name__ == "__main__":
                             print("Velocidade atual: {}".format(vel))
 
 
-
-
-
 #__________________________________________________________________ACHOU O ID DA LISTA________________________________________________________________________#
 
             # 1. Manter o robô na pista usando O código do pto de fuga
 
 
-                elif id == lista_quero[1]:
+                if id == lista_quero[1] and pegou == False:
                         #print(lista_quero[1], id)
                         #print("id encontrado")
                     if y < -0.1:
@@ -434,14 +438,14 @@ if __name__ == "__main__":
             velocidade_saida.publish(vel)
             rospy.sleep(0.2)
 
-            # if cv_image is not None:                
-            #     cv2.imshow("/camera/rgb/image_raw/theora", cv_image)
-            #     cv2.waitKey(1)
-
-            if bordas_color is not None:
-                numpy_vertical_concat = np.concatenate((bordas_color, cv_image), axis=1)
-                cv2.imshow("Video", numpy_vertical_concat)
+            if cv_image is not None:                
+                cv2.imshow("/camera/rgb/image_raw/theora", cv_image)
                 cv2.waitKey(1)
+
+            # if bordas_color is not None:
+            #     numpy_vertical_concat = np.concatenate((bordas_color, cv_image), axis=1)
+            #     cv2.imshow("Video", numpy_vertical_concat)
+            #     cv2.waitKey(1)
                 
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
