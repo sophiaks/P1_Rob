@@ -38,7 +38,7 @@ line2 = None
 global bordas_color
 bordas = None
 
-
+global lista_dist
 global ptos
 global ptom
 global bordas_color
@@ -49,6 +49,7 @@ mask = None
 
 cv_image = None
 
+lista_dist = []
 ptos = []
 ptom = None
 bordas_color = None
@@ -217,8 +218,10 @@ if __name__ == "__main__":
                 line2 = None
 
                 ptos = []
+
                 mask  = cv2.inRange(cv_image, pto_fuga.cor_menor, pto_fuga.cor_maior)
-                mask += cv2.inRange(cv_image, pto_fuga.cor_menor2, pto_fuga.cor_maior2)
+                #mask += cv2.inRange(cv_image, pto_fuga.cor_menor2, pto_fuga.cor_maior2)
+                
                 blur = cv2.GaussianBlur(mask, (5, 5), 0)
                 bordas = cv2.Canny(blur, 50, 150, apertureSize=3)
                 bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR)
@@ -261,12 +264,12 @@ if __name__ == "__main__":
 
                             print(p1, p2)
 
-                            if m < -0.1 and m > -15:
+                            if m < -0.1 and m > -2:
                                 cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
                                 line1 = (p1, p2)
                                 print("Linha esquerda ok")
 
-                            elif m > 0.1 and m < 15:
+                            elif m > 0.1 and m < 3:
                                 cv2.line(cv_image,(x1,y1),(x2,y2),(0,255,0),1) 
                                 line2 = (p1, p2) 
                                 print("Linha direita ok")
@@ -284,6 +287,7 @@ if __name__ == "__main__":
                             #     print("direita (linha)")
                                 
 
+                    #cormodule.identifica_cor(cv_image, cor)
 #_______________________________________________________________________________SE ACHAR PONTO DE FUGA_________________________________________________________________#
 #Média dos pontos:   
                     if ptos is not None: # acho q n precisa, mas...
@@ -317,7 +321,8 @@ if __name__ == "__main__":
                             else:
                                 vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
                                 print("Seguindo em frente. Velocidade atual: {}".format(vel))
-                                        
+
+                                                                    
                         else:
                             print("Não achou o ponto de fuga")
                             vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))

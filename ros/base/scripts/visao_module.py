@@ -38,7 +38,7 @@ def processa(frame):
 
 
 
-def identifica_cor(frame):
+def identifica_cor(frame, cor):
     '''
     Segmenta o maior objeto cuja cor é parecida com cor_h (HUE da cor, no espaço HSV).
     '''

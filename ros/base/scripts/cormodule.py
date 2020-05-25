@@ -71,7 +71,7 @@ def identifica_cor(frame, cor):
         maior_contorno = np.reshape(maior_contorno, (maior_contorno.shape[0], 2))
         media = maior_contorno.mean(axis=0)
         media = media.astype(np.int32)
-        # cv2.circle(frame, (media[0], media[1]), 5, [0, 255, 0])
+        cv2.circle(frame, (media[0], media[1]), 5, [0, 255, 0])
         cross(frame, centro, [255,0,0], 1, 17)
     else:
         media = (0, 0)
