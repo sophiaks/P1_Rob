@@ -27,17 +27,25 @@ def identifica_cor(frame, cor):
     # do vermelho:
     # frame = cv2.flip(frame, -1) # flip 0: eixo x, 1: eixo y, -1: 2 eixos
     frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    cor_menor = np.array([0, 50, 50])
-    cor_maior = np.array([8, 255, 255])
-    segmentado_cor = cv2.inRange(frame_hsv, cor_menor, cor_maior)
+    if cor == 'blue':
+        cor_menor = np.array([110, 50, 50])
+        cor_maior = np.array([130, 255, 255])
+        segmentado_cor = cv2.inRange(frame_hsv, cor_menor, cor_maior)
 
-    cor_menor = np.array([172, 50, 50])
-    cor_maior = np.array([180, 255, 255])
-    segmentado_cor += cv2.inRange(frame_hsv, cor_menor, cor_maior)
+    if cor == 'green':
+        cor_menor = np.array([45, 50, 50])
+        cor_maior = np.array([75, 255, 255])
+        segmentado_cor = cv2.inRange(frame_hsv, cor_menor, cor_maior)
 
-    # Note que a notacão do numpy encara as imagens como matriz, portanto o enderecamento é
-    # linha, coluna ou (y,x)
-    # Por isso na hora de montar a tupla com o centro precisamos inverter, porque 
+    if cor == 'pink':
+        cor_menor = np.array([145, 50, 50])
+        cor_maior = np.array([155, 255, 255])
+        segmentado_cor = cv2.inRange(frame_hsv, cor_menor, cor_maior)
+
+    if cor == 'amarelo':
+        cor_menor = np.array([20, 100, 100], dtype=np.uint8)
+        cor_maior = np.array([30, 255, 255], dtype=np.uint8)
+        segmentado_cor = cv2.inRange(frame_hsv, cor_menor, cor_maior)
     centro = (frame.shape[1]//2, frame.shape[0]//2)
 
 

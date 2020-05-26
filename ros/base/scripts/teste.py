@@ -41,10 +41,18 @@ global ptom
 global bordas_color
 global tutorial
 global pegou
+global lista_dist
+global mask
+global media
+global cm_amarelo
 
 ptos = []
 ptom = None
 bordas_color = None
+bordas = None
+cm_amarelo = None
+mask = None
+
 
 lista_dist = []
 pegou = False
@@ -73,7 +81,8 @@ area = 0.0  # Variavel com a area do maior contorno
 # Descarta imagens que chegam atrasadas demais
 check_delay = False
 # _________________________TF_________________________
-frame = "camera_link"
+frame = "head_camera"
+#frame = "camera_link"
 tfl = 0
 tf_buffer = tf2_ros.Buffer()
 
@@ -136,6 +145,7 @@ def roda_todo_frame(imagem):
     global pto
     global linha1
     global linha2
+    global cm_amarelo
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
@@ -148,17 +158,16 @@ def roda_todo_frame(imagem):
     try:
         antes = time.clock()
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
+        temp_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
         # cv_image = cv2.flip(cv_image, -1)
 
         media, centro, maior_area = cormodule.identifica_cor(
             cv_image, lista_quero[0])
-        centro, saida_net, resultados = visao_module.processa(temp_image)
-        pto = pto_fuga.line_intersecction(cv_image)
-        for r in resultados:
-            print(r)
-            pass
+        centro_visao, saida_net, resultados = visao_module.processa(temp_image)
+        cm_amarelo = cormodule.identifica_cor(cv_image, 'amarelo')[1]
         depois = time.clock()
         cv2.imshow("Camera", cv_image)
+        cv2.waitKey(0)
 
     except CvBridgeError as e:
         print('ex', e)
@@ -169,17 +178,15 @@ if __name__ == "__main__":
     
 
     # topico_imagem = "/kamera"
-    topico_imagem = "/camera/rgb/image_raw/theora"
+    topico_imagem = "/camera/rgb/image_raw/compressed"
 
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
     # Para recebermos notificacoes de que marcadores foram vistos
-    recebedor = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe)
-    recebedor = rospy.Subscriber(
+    recebedor2 = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, recebe)
+    recebedor2 = rospy.Subscriber(
         topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size=2**24)
 
     print("Usando ", topico_imagem)
-
-    dist = rospy.Subscriber(("/scan"), LaserScan, funcscan)
     tfl = tf2_ros.TransformListener(tf_buffer)
     tolerancia = 25
 
@@ -188,80 +195,95 @@ if __name__ == "__main__":
         vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, math.pi/10.0))
         while not rospy.is_shutdown():
             if cv_image is not None:
-                gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-                blur = cv2.GaussianBlur(gray, (5, 5), 0)
-                bordas = cv2.Canny(blur, 50, 150, apertureSize=3)
-                bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR)
-                mask = cv2.inRange(
-                    bordas_color, pto_fuga.cor_menor, pto_fuga.cor_maior)
-                lines = cv2.HoughLines(mask, 1, np.pi/180, 200)
+#                 gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+#                 blur = cv2.GaussianBlur(gray, (5, 5), 0)
+#                 bordas = cv2.Canny(blur, 50, 150, apertureSize=3)
+#                 bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR)
+#                 mask  = cv2.inRange(cv_image, pto_fuga.cor_menor, pto_fuga.cor_maior)
+#                 mask += cv2.inRange(cv_image, pto_fuga.cor_menor2, pto_fuga.cor_maior2)
+#                 lines = cv2.HoughLines(mask, 1, np.pi/180, 150)
 
-#__________________________________________________________________CASO TENHA ALGUMA LINHA_______________________________________________________________________#
+# #__________________________________________________________________CASO TENHA ALGUMA LINHA_______________________________________________________________________#
 
-            if lines is not None:
-                print("Achou linha(s): {}".format(lines))
+#             if lines is not None:
+#                 print("Achou linha(s): {}".format(lines))
 
-                for line in lines:
-                    for rho, theta in line:
-                        a = np.cos(theta)
-                        b = np.sin(theta)
-                        x0 = a*rho
-                        y0 = b*rho
-                        x1 = int(x0 + 3000*(-b))
-                        y1 = int(y0 + 3000*(a))
-                        x2 = int(x0 - 3000*(-b))
-                        y2 = int(y0 - 3000*(a))
+#                 for line in lines:
+#                     for rho, theta in line:
+#                         a = np.cos(theta)
+#                         b = np.sin(theta)
+#                         x0 = a*rho
+#                         y0 = b*rho
+#                         x1 = int(x0 + 3000*(-b))
+#                         y1 = int(y0 + 3000*(a))
+#                         x2 = int(x0 - 3000*(-b))
+#                         y2 = int(y0 - 3000*(a))
 
-                        if x2 != x1:
-                            m = (y1-y0)/(x1-x0)
+#                         if x2 != x1:
+#                             m = (y1-y0)/(x1-x0)
 
-                        h = y0 - (m * x0)
-                        p1 = (x1, y1)
-                        p2 = (x2, y2)
+#                         h = y0 - (m * x0)
+#                         p1 = (x1, y1)
+#                         p2 = (x2, y2)
 
-                        if m < -0.3 and m > -19:
-                            cv2.line(cv_image, (x1, y1),
-                                     (x2, y2), (0, 255, 0), 1)
-                            line1 = (p1, p2)
-                            if line1 is not None:
-                                print("Linha esquerda ok")
+#                         if m < -0.2 and m > -10:
+#                             cv2.line(cv_image, (x1, y1),
+#                                      (x2, y2), (0, 255, 0), 1)
+#                             line1 = (p1, p2)
+#                             if line1 is not None:
+#                                 print("Linha esquerda ok")
 
-                        elif m > 0.3 and m < 15:
-                            cv2.line(cv_image, (x1, y1),
-                                     (x2, y2), (0, 255, 0), 1)
-                            line2 = (p1, p2)
-                            if line1 is not None:
-                                print("Linha direita ok")
+#                         elif m > 0.1 and m < 11:
+#                             cv2.line(cv_image, (x1, y1),
+#                                      (x2, y2), (0, 255, 0), 1)
+#                             line2 = (p1, p2)
+#                             if line1 is not None:
+#                                 print("Linha direita ok")
 
-                        if line1 is not None and line2 is not None:
-                            pi = pto_fuga.line_intersecion(line1, line2)
-                            ptos.append(pi)
+#                         if line1 is not None and line2 is not None:
+#                             pi = pto_fuga.line_intersecion(line1, line2)
+#                             ptos.append(pi)
 
-#_______________________________________________________________________________SE ACHAR PONTO DE FUGA_________________________________________________________________#
+# #_______________________________________________________________________________SE ACHAR PONTO DE FUGA_________________________________________________________________#
 
-            if len(ptos) > 0:
-                if len(ptos) > 1:
-                    ptom = np.array(ptos).mean(axis=0)
-                else:
-                    ptom = ptos[0]
-                ptom = tuple(ptom)
+#             if len(ptos) > 0:
+#                 if len(ptos) > 1:
+#                     ptom = np.array(ptos).mean(axis=0)
+#                 else:
+#                     ptom = ptos[0]
+#                 ptom = tuple(ptom)
+#                 cv2.circle(cv_image, (int(ptom[0]), int(ptom[1])), 3, (255,0,0), 2)
 
-                print("x do ponto: {} y do ponto {}".format(ptom[0], ptom[1]))
-                if ptom[0] > cv_image.shape[0]/2 + 20:
-                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
-                    print("Ponto tá pra direita. Velocidade atual: {}".format(vel))
-                elif ptom[0] < cv_image.shape[0]/2 - 20:
-                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.2))
-                    print("Ponto tá pra esquerda. Velocidade atual: {}".format(vel))
-                else:
-                    vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
-                    print("Seguindo em frente. Velocidade atual: {}".format(vel))
+#                 print("x do ponto: {} y do ponto {}".format(ptom[0], ptom[1]))
+#                 if ptom[0] > cv_image.shape[0]/2 + 20:
+#                     vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
+#                     print("Ponto tá pra direita. Velocidade atual: {}".format(vel))
+#                 elif ptom[0] < cv_image.shape[0]/2 - 20:
+#                     vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.2))
+#                     print("Ponto tá pra esquerda. Velocidade atual: {}".format(vel))
+#                 else:
+#                     vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
+#                     print("Seguindo em frente. Velocidade atual: {}".format(vel))
+                if cm_amarelo is not None:
 
-                    for value in laser:
-                        if value < 0.75:
-                            print("Agora vai garra")
-                            vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
-                            velocidade_saida.publish(vel)
+                    cv2.circle(cv_image, (int(cm_amarelo[0]), int(cm_amarelo[0])), 3, (255,0,230), 2)
+
+                    if cm_amarelo[0] > cv_image.shape[0]/2 + 80:
+                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.05))
+                                                    
+                        print("Ponto tá pra direita. Velocidade atual: {}".format(vel))
+                        
+                    elif cm_amarelo[0] < cv_image.shape[0]/2 - 80:
+                        vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.05))
+                        
+                        print("Ponto tá pra esquerda. Velocidade atual: {}".format(vel))
+
+                    else:                        
+                        vel = Twist(Vector3(0.2, 0, 0), Vector3(0, 0, 0))
+                        print("Seguindo em frente. Velocidade atual: {}".format(vel))
+
+
+
             else:
                 print("Não achou o ponto de fuga")
                 vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
@@ -276,7 +298,7 @@ if __name__ == "__main__":
                     print("nenhum id encontrado")
 
             else:
-                if id == lista_quero[1] and pegou = False:
+                if id == lista_quero[1] and pegou == False and centro is not None:
                     print(lista_quero[1], id)
                     print("id encontrado")
                     if y < -0.08:
@@ -328,7 +350,7 @@ if __name__ == "__main__":
 
 #__________________________________________________________________ACHOU UM ID MAS NÃO É O DA LISTA________________________________________________________________________#
 
-                elif pegou = True:
+                elif pegou == True:
                     print("Achou o id errado, centralizando no ponto de fuga de novo")
                     if len(ptom) > 0:  # Se tiver um ponto de fuga
                         for res in resultados:
@@ -346,10 +368,10 @@ if __name__ == "__main__":
 
                             elif res == lista_quero[2]:
                                 print("x do ponto: {} y do ponto {}".format(ptom[0], ptom[1]))
-                                if centro > cv_image.shape[0]/2 + 15:
+                                if centro_visao > cv_image.shape[0]/2 + 15:
                                     vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, -0.2))
                                     print("Velocidade atual: {}".format(vel))
-                                elif centro < cv_image.shape[0]/2 - 15:
+                                elif centro_visao < cv_image.shape[0]/2 - 15:
                                     vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0.2))
                                     print("Velocidade atual: {}".format(vel))
                                 else:
@@ -360,6 +382,8 @@ if __name__ == "__main__":
                         print("ué cadê o ponto de fuga")
 
             # Alinhado com o while not shutdown
+
+
             velocidade_saida.publish(vel)
             rospy.sleep(0.2)
 

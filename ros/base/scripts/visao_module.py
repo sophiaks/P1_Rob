@@ -20,21 +20,22 @@ import mobilenet_simples as mnet
 
 def processa(frame):
     '''Use esta funcao para basear o processamento do seu robo'''
+    if frame is not None:
 
-    result_frame, result_tuples = mnet.detect(frame)
+        result_frame, result_tuples = mnet.detect(frame)
 
-    centro = (frame.shape[1]//2, frame.shape[0]//2)
+        centro = (frame.shape[1]//2, frame.shape[0]//2)
 
-    def cross(img_rgb, point, color, width,length):
-        cv2.line(img_rgb, (point[0] - int(length/2), point[1]),  (point[0] + int(length/2), point[1]), color ,width, length)
-        cv2.line(img_rgb, (point[0], point[1] - int(length/2)), (point[0], point[1] + int(length/2)),color ,width, length)
+        def cross(img_rgb, point, color, width,length):
+            cv2.line(img_rgb, (point[0] - int(length/2), point[1]),  (point[0] + int(length/2), point[1]), color ,width, length)
+            cv2.line(img_rgb, (point[0], point[1] - int(length/2)), (point[0], point[1] + int(length/2)),color ,width, length)
 
-    cross(result_frame, centro, [255,0,0], 1, 17)
+        cross(result_frame, centro, [255,0,0], 1, 17)
 
-    # cv2.imshow('video', result_frame)
-    cv2.waitKey(1)
+        # cv2.imshow('video', result_frame)
+        cv2.waitKey(1)
 
-    return centro, result_frame, result_tuples
+        return centro, result_frame, result_tuples
 
 
 
