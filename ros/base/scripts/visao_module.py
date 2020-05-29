@@ -31,7 +31,7 @@ def processa(frame):
 
     cross(result_frame, centro, [255,0,0], 1, 17)
 
-    # cv2.imshow('video', result_frame)
+    cv2.imshow('video', result_frame)
     cv2.waitKey(1)
 
     return centro, result_frame, result_tuples
@@ -107,4 +107,4 @@ def identifica_cor(frame, cor):
     # cv2.imshow('seg', segmentado_cor)
     cv2.waitKey(1)
 
-    return centro, result_frame, result_tuples
+    return centro
